@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://dwsoft.io/restexception/v1/schema/MultiError",
+    "title": "MultiError",
+    "description": "A representation of a collection of errors",
+    "type": "object",
+    "properties": {
+        "errors": {
+            "description": "Collection of errors happened during processing request",
+            "type": "array",
+            "minLength": 1,
+            "items": {
+                "$ref": "https://dwsoft.io/restexception/v1/schema/Error"
+            }
+        }
+    },
+    "required": ["errors"],
+    "examples": [
+        {
+            "errors": [
+                {
+                    "code": "REQUIRED_VALUE_MISSING",
+                    "message": "Value of parameter 'foo' is missing",
+                    "source": {
+                        "type": "query",
+                        "location": "foo"
+                    }
+                },
+                {
+                    "code": "REQUIRED_VALUE_MISSING",
+                    "message": "Value of property 'bar' is missing",
+                    "source": {
+                        "type": "body",
+                        "location": "$.foo.bar"
+                    }
+                }
+            ]
+        }
+    ]
+}

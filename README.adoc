@@ -1,0 +1,5 @@
+= RESTX (REST eXceptions)
+
+Error handling framework for REST (-ful or not so much) services.
+
+The goal of this project is to provide an intuitive, structurized and informing error model for REST services.
