@@ -1,10 +1,13 @@
-package io.dwsoft.restx.fault
+package io.dwsoft.restx.response
 
-class ErrorResponse(val status: HttpStatus, errors: List<ApiError>) {
-    val payload: ErrorResponsePayload = errors.toPayload()
+import io.dwsoft.restx.payload.ApiError
+import io.dwsoft.restx.payload.ErrorResponsePayload
+import io.dwsoft.restx.payload.MultiErrorPayload
 
-    constructor(status: HttpStatus, error: ApiError) : this(status, listOf(error))
-
+/**
+ * Model of HTTP response containing info about error(s) that happened into API process.
+ */
+class ErrorResponse(val status: HttpStatus, val payload: ErrorResponsePayload) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -28,17 +31,6 @@ class ErrorResponse(val status: HttpStatus, errors: List<ApiError>) {
     }
 }
 
-private fun List<ApiError>.toPayload() = when (size) {
-    1 -> first()
-    else -> MultiErrorPayload(this)
-}
-
 data class HttpStatus(val code: Int)
 
 fun status(code: Int): HttpStatus = HttpStatus(code)
-
-sealed interface ErrorResponsePayload
-
-data class ApiError(val code: String, val message: String) : ErrorResponsePayload
-
-data class MultiErrorPayload(val errors: List<ApiError>) : ErrorResponsePayload

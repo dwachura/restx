@@ -1,9 +1,8 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.fault.FaultHandler
+import io.dwsoft.restx.response.ResponseGenerator
 
-typealias RestX = FaultHandler
-internal typealias Fault = Any
+typealias RestX = ResponseGenerator<Any>
 
 /**
  * Base class for exceptions thrown by RestX library components
