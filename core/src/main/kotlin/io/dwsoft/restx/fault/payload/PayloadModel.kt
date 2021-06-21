@@ -1,4 +1,4 @@
-package io.dwsoft.restx.payload
+package io.dwsoft.restx.fault.payload
 
 /**
  * Base interface used for flag classes that represents valid error response payload.

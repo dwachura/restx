@@ -1,8 +1,6 @@
-package io.dwsoft.restx.response
+package io.dwsoft.restx.fault.response
 
-import io.dwsoft.restx.payload.ApiError
-import io.dwsoft.restx.payload.ErrorResponsePayload
-import io.dwsoft.restx.payload.MultiErrorPayload
+import io.dwsoft.restx.fault.payload.ErrorResponsePayload
 
 /**
  * Model of HTTP response containing info about error(s) that happened into API process.
@@ -33,4 +31,4 @@ class ErrorResponse(val status: HttpStatus, val payload: ErrorResponsePayload) {
 
 data class HttpStatus(val code: Int)
 
-fun status(code: Int): HttpStatus = HttpStatus(code)
+fun httpStatus(code: Int): HttpStatus = HttpStatus(code)

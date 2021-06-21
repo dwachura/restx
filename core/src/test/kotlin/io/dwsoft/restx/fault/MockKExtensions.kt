@@ -1,4 +1,4 @@
-package io.dwsoft.restx
+package io.dwsoft.restx.fault
 
 import io.mockk.MockKVerificationScope
 import io.mockk.verify
