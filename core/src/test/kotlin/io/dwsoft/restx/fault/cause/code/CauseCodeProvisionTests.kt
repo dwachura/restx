@@ -8,6 +8,8 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.containInOrder
 import io.kotest.matchers.string.shouldContain
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 class FixedCauseCodeProviderTests : FunSpec({
     test("defined code is always returned") {
@@ -46,5 +48,25 @@ class MapBasedCauseCodeProviderTests : FunSpec({
             MapBasedCauseCodeProvider(mapOf("fault-id" to "code"))
                 .codeFor(Any().causeId(unmappedId))
         }.message should containInOrder("None code mapping found for id", unmappedId)
+    }
+})
+
+class GeneratedCauseCodeProviderTests : FunSpec({
+    test("code defined by passed function is returned") {
+        val suffix = Random.nextUInt()
+        val sut = CauseCodeProviders.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
+
+        assertSoftly {
+            sut.codeFor(Any().causeId("id1")) shouldBe "${Any::class.simpleName}_$suffix"
+            sut.codeFor(Exception().causeId("id2")) shouldBe "${Exception::class.simpleName}_$suffix"
+            sut.codeFor("fault".causeId("id1")) shouldBe "${String::class.simpleName}_$suffix"
+        }
+    }
+
+    test("code same as cause id is returned") {
+        val expectedId = "id"
+        val sut = CauseCodeProviders.sameAsCauseId<Any>()
+
+        sut.codeFor(Any().causeId(expectedId)) shouldBe expectedId
     }
 })

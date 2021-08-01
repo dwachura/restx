@@ -30,5 +30,3 @@ class ErrorResponse(val status: HttpStatus, val payload: ErrorResponsePayload) {
 }
 
 data class HttpStatus(val code: Int)
-
-fun httpStatus(code: Int): HttpStatus = HttpStatus(code)

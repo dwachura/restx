@@ -4,9 +4,12 @@ import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.fault.cause.code.CauseCodeProviders
 import io.dwsoft.restx.fault.cause.code.CauseCodeProvider
-import io.dwsoft.restx.fault.cause.code.providedBy
+import io.dwsoft.restx.fault.cause.code.fixed
+import io.dwsoft.restx.fault.cause.code.generatedAs
+import io.dwsoft.restx.fault.cause.code.mapBased
 import io.dwsoft.restx.fault.cause.message.CauseMessageProvider
 import io.dwsoft.restx.fault.cause.message.CauseMessageProviders
+import io.dwsoft.restx.fault.cause.message.fixed
 import io.dwsoft.restx.fault.payload.ApiError
 import io.dwsoft.restx.initLog
 
@@ -55,12 +58,6 @@ class StandardCauseProcessor<T : Any>(
         return ApiError(code, message)
     }
 
-    /**
-     * Builder of [StandardCauseProcessor].
-     *
-     * If not explicitly [configured][code], objects produced by such processor have their
-     * code equal to [id of the fault object][Cause.id] for which are generated.
-     */
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): StandardCauseProcessor<T> {
             checkNotNull(config.causeMessageProviderFactory) { "Message provider factory must be configured" }
@@ -70,8 +67,14 @@ class StandardCauseProcessor<T : Any>(
             )
         }
 
+        /**
+         * Configuration of [StandardCauseProcessor]'s [Builder].
+         *
+         * If not explicitly [configured][code], objects produced by such processor have their
+         * code equal to [id of the fault object][Cause.id] for which are generated.
+         */
         class Config<T : Any> {
-            var causeCodeProviderFactory: CauseCodeProviderFactory<T> = { providedBy { id } }
+            var causeCodeProviderFactory: CauseCodeProviderFactory<T> = { generatedAs { id } }
                 private set
             var causeMessageProviderFactory: (CauseMessageProviderFactory<T>)? = null
                 private set
@@ -88,10 +91,9 @@ class StandardCauseProcessor<T : Any>(
 }
 
 /**
- * Factory method that creates [standard implementation][StandardCauseProcessor]
- * of [CauseProcessor].
+ * Factory method that creates [standard implementation][StandardCauseProcessor] of [CauseProcessor].
  */
-fun <T: Any> CauseProcessors.standard(
+fun <T : Any> CauseProcessors.standard(
     initBlock: InitBlock<StandardCauseProcessor.Builder.Config<T>>
 ): CauseProcessor<T> = StandardCauseProcessor.buildFrom(
     StandardCauseProcessor.Builder.Config<T>().apply(initBlock)
@@ -99,3 +101,15 @@ fun <T: Any> CauseProcessors.standard(
 
 typealias CauseCodeProviderFactory<T> = CauseCodeProviders.() -> CauseCodeProvider<T>
 typealias CauseMessageProviderFactory<T> = CauseMessageProviders.() -> CauseMessageProvider<T>
+
+/**
+ * Extension function serving as a shortcut to configure cause processor builder to create
+ * processor with [fixed code provider][CauseCodeProviders.fixed].
+ */
+fun <T : Any> StandardCauseProcessor.Builder.Config<T>.code(fixed: String) = code { fixed(fixed) }
+
+/**
+ * Extension function serving as a shortcut to configure cause processor builder to create
+ * processor with [fixed message provider][CauseMessageProviders.fixed].
+ */
+fun <T : Any> StandardCauseProcessor.Builder.Config<T>.message(fixed: String) = message { fixed(fixed) }

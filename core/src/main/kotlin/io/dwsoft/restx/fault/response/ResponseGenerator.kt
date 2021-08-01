@@ -1,6 +1,8 @@
 package io.dwsoft.restx.fault.response
 
 import io.dwsoft.restx.RestXException
+import io.dwsoft.restx.fault.cause.message.CauseMessageProviders
+import io.dwsoft.restx.fault.cause.message.fixed
 import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.initLog
 
@@ -33,7 +35,7 @@ class ResponseGenerator<T : Any>(
             checkNotNull(config.errorPayloadGeneratorFactory) { "Payload generator factory must be provided" }
             checkNotNull(config.responseStatusProviderFactory) { "Status provider factory must be provided" }
             return ResponseGenerator(
-                (config.errorPayloadGeneratorFactory!!)(ErrorPayloadGenerator.Builders),
+                (config.errorPayloadGeneratorFactory!!)(ErrorPayloadGenerator.Builders()),
                 (config.responseStatusProviderFactory!!)(ResponseStatusProviders)
             )
         }
@@ -44,13 +46,14 @@ class ResponseGenerator<T : Any>(
             var responseStatusProviderFactory: (ResponseStatusProviderFactory)? = null
                 private set
 
-            fun payloadOf(errorPayloadGeneratorFactory: ErrorPayloadGeneratorFactory<T>) {
+            fun payload(errorPayloadGeneratorFactory: ErrorPayloadGeneratorFactory<T>) {
                 this.errorPayloadGeneratorFactory = errorPayloadGeneratorFactory
             }
 
             fun status(responseStatusProviderFactory: ResponseStatusProviderFactory) {
                 this.responseStatusProviderFactory = responseStatusProviderFactory
             }
+
         }
     }
 }
@@ -66,12 +69,18 @@ fun interface ResponseStatusProvider {
  * Factories of [ResponseStatusProvider]s.
  */
 object ResponseStatusProviders {
-    fun of(status: Int) = ResponseStatusProvider { httpStatus(status) }
-    fun of(status: () -> Int) = ResponseStatusProvider { httpStatus(status()) }
+    fun of(status: Int) = ResponseStatusProvider { HttpStatus(status) }
+    fun of(status: () -> Int) = ResponseStatusProvider { HttpStatus(status()) }
 
     fun providedBy(statusProvider: () -> HttpStatus) = ResponseStatusProvider { statusProvider() }
 }
 
 typealias ErrorPayloadGeneratorFactory<T> =
-        ErrorPayloadGenerator.Builders.() -> ErrorPayloadGenerator<T, *>
+        ErrorPayloadGenerator.Builders<T>.() -> ErrorPayloadGenerator<T, *>
 typealias ResponseStatusProviderFactory = ResponseStatusProviders.() -> ResponseStatusProvider
+
+/**
+ * Extension function serving as a shortcut to configure response generator builder to create
+ * generator of responses with passed status value.
+ */
+fun <T : Any> ResponseGenerator.Builder.Config<T>.status(status: Int) = status { of(status) }

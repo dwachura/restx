@@ -45,50 +45,6 @@ class CauseResolverFactoriesTests : FunSpec({
 
         resolver.causeOf(TestFaultClass(faultId)).id shouldBe faultId
     }
-
-    test("multi-cause resolver calls single-cause one used to its creation") {
-        val fault = TestFaultClass()
-        val singleCauseResolver = mock<SingleCauseResolver<TestFaultClass>> {
-            every { this@mock.causeOf(fault) } returns dummy()
-        }
-        val multiCauseResolver = CauseResolvers.multipleCauses(
-            prefixedBy = singleCauseResolver,
-            suffixedBy = { dummy() }
-        )
-
-        multiCauseResolver.causesOf(fault)
-
-        verify { singleCauseResolver.causeOf(fault) }
-    }
-
-    test("""
-        causes returned by multi-cause resolver are combined of single-cause 
-        resolver cause's id and provided suffixes
-    """.trimIndent()) {
-        val prefix = "prefix"
-        val expectedSuffixes = sequenceOf("1", "2", "3")
-        val resolver = CauseResolvers.multipleCauses(
-            prefixedBy = CauseResolvers.fixedId(prefix),
-            suffixedBy = { expectedSuffixes }
-        )
-        val expectedIds = expectedSuffixes.map { "$prefix.$it" }.toList()
-
-        val causesIds = resolver.causesOf(TestFaultClass()).map { it.id }
-
-        causesIds shouldContainExactly expectedIds
-    }
-
-    test("separator of multi-cause resolver can be changed") {
-        val separator = "---"
-        val expectedSuffix = "suffix"
-        val resolver = CauseResolvers.multipleCauses<TestFaultClass>(
-            withSeparator = separator
-        ) { sequenceOf(expectedSuffix) }
-
-        val causeId = resolver.causesOf(TestFaultClass()).map { it.id }.first()
-
-        causeId shouldBe "${TestFaultClass.classQualifiedName()}$separator$expectedSuffix"
-    }
 })
 
 private inline fun <reified T> qualifiedNameOf() = T::class.qualifiedName!!
