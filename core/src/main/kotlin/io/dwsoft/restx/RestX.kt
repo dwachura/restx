@@ -13,10 +13,7 @@ class RestX {
          * @throws RestXConfigurationFailure in case of any errors during
          *      creation of a generator
          */
-        /*
-         * TODO: tests
-         */
-        fun <T: Any> respondTo(
+        fun <T : Any> respondTo(
             initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
         ): ResponseGenerator<T> = runCatching {
             ResponseGenerator.Builder.Config<T>()

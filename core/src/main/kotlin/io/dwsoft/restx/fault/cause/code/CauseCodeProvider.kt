@@ -26,32 +26,30 @@ class CauseCodeProvisioningFailure(message: String) : RestXException(message)
  * Additional factory methods should be added as an extension functions.
  */
 /*
- * TODO: check (especially in java) whether moving standard factory methods to
- *  this object is better.
+ * TODO: check (especially in java) whether moving standard factory methods to this object is better.
  */
 object CauseCodeProviders
 
 /**
  * Factory method that creates [CauseCodeProvider] based on passed function
  */
-fun <T : Any> CauseCodeProviders.providedBy(
-    provider: Cause<T>.() -> String
-): CauseCodeProvider<T> =
+fun <T : Any> CauseCodeProviders.generatedAs(provider: Cause<T>.() -> String): CauseCodeProvider<T> =
     object : CauseCodeProvider<T> {
         private val log = CauseCodeProvider::class.initLog()
 
         override fun codeFor(cause: Cause<T>): String =
-            cause.provider().also {
-                log.info { "Returning code [$it] from custom provider for $cause" }
-            }
+            cause.provider().also { log.info { "Returning code [$it] from custom provider for $cause" } }
     }
+
+/**
+ * Factory method for [providers][CauseCodeProvider] that returns code same as passed [cause id][Cause.id]
+ */
+fun <T : Any> CauseCodeProviders.sameAsCauseId(): CauseCodeProvider<T> = generatedAs { id }
 
 /**
  * Implementation of [CauseCodeProvider] returning fixed code for any fault cause.
  */
-class FixedCauseCodeProvider(
-    private val code: String
-) : CauseCodeProvider<Any> {
+class FixedCauseCodeProvider(private val code: String) : CauseCodeProvider<Any> {
     private val log = initLog()
 
     override fun codeFor(cause: Cause<Any>): String =
@@ -70,9 +68,7 @@ fun <T : Any> CauseCodeProviders.fixed(code: String): CauseCodeProvider<T> =
  *
  * @param mapping <fault cause id>:<fault code> map
  */
-class MapBasedCauseCodeProvider(
-    private val mapping: Map<String, String>
-) : CauseCodeProvider<Any> {
+class MapBasedCauseCodeProvider(private val mapping: Map<String, String>) : CauseCodeProvider<Any> {
     private val log = initLog()
 
     init {
@@ -92,6 +88,11 @@ class MapBasedCauseCodeProvider(
 /**
  * Factory method for [MapBasedCauseCodeProvider]
  */
-fun <T : Any> CauseCodeProviders.mapBased(
-    mapping: Map<String, String>
-): CauseCodeProvider<T> = MapBasedCauseCodeProvider(mapping)
+fun <T : Any> CauseCodeProviders.mapBased(mapping: Map<String, String>): CauseCodeProvider<T> =
+    MapBasedCauseCodeProvider(mapping)
+
+/**
+ * Factory method for [MapBasedCauseCodeProvider]
+ */
+fun <T : Any> CauseCodeProviders.mapBased(vararg mapEntries: Pair<String, String>): CauseCodeProvider<T> =
+    this.mapBased(mapping = mapOf(pairs = mapEntries))

@@ -1,8 +1,6 @@
 rootProject.name = "restx"
 
-include(
-    "core"
-)
+include("core")
 
 pluginManagement {
     repositories {

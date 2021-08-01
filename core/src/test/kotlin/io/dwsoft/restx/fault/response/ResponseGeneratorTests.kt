@@ -66,7 +66,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
         shouldThrow<IllegalStateException> {
             ResponseGenerator.buildFrom(
                 Config<Any>().apply {
-                    payloadOf { dummy() }
+                    payload { dummy() }
                 }
             )
         }.message shouldContain "Status provider factory must be provided"
@@ -77,13 +77,13 @@ class ResponseGeneratorBuilderTests : FunSpec({
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
-            payloadOf(factory)
+            payload(factory)
             status { dummy() }
         }
 
         ResponseGenerator.buildFrom(config)
 
-        verify { factory(ErrorPayloadGenerator.Builders) }
+        verify { factory(any()) }
     }
 
     test("configured status provider factory is called") {
@@ -91,7 +91,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
-            payloadOf { dummy() }
+            payload { dummy() }
             status(factory)
         }
 
