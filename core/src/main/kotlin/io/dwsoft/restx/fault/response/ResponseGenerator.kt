@@ -53,7 +53,6 @@ class ResponseGenerator<T : Any>(
             fun status(responseStatusProviderFactory: ResponseStatusProviderFactory) {
                 this.responseStatusProviderFactory = responseStatusProviderFactory
             }
-
         }
     }
 }

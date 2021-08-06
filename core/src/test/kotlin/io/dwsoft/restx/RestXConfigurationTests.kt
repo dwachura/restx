@@ -1,6 +1,5 @@
-package io.dwsoft.restx.config
+package io.dwsoft.restx
 
-import io.dwsoft.restx.RestX
 import io.dwsoft.restx.fault.cause.code
 import io.dwsoft.restx.fault.cause.code.generatedAs
 import io.dwsoft.restx.fault.cause.code.mapBased

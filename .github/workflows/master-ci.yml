@@ -1,4 +1,4 @@
-name: CI
+name: master CI
 on:
   push:
     branches: [ master ]
@@ -12,7 +12,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run a one-line script
-        run: |
-          echo Building project...
-          ./gradlew build
+      - name: Build and test
+        run: ./gradlew build
