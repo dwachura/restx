@@ -15,4 +15,4 @@ jobs:
       - name: Run a one-line script
         run: |
           echo Building project...
-          echo $(pwd)
+          ./gradlew build
