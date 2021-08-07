@@ -1,6 +1,8 @@
 rootProject.name = "restx"
 
-include("core")
+include(
+    "core", "core:codegen"
+)
 
 pluginManagement {
     repositories {
@@ -9,6 +11,7 @@ pluginManagement {
     }
 
     plugins {
-        kotlin("jvm") version "1.5.0" apply false
+        kotlin("jvm") version "1.5.21" apply false
+        kotlin("kapt") version "1.5.21" apply false
     }
 }
