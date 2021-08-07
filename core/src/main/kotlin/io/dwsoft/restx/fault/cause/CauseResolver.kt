@@ -4,8 +4,8 @@ import io.dwsoft.restx.RestXException
 import kotlin.reflect.KClass
 
 /**
- * Interface of cause resolvers - services used to retrieve information about reasons of failure
- * from passed fault result.
+ * Interface of cause resolvers - services used to retrieve information about reasons of failure from passed
+ * fault result.
  *
  * @param T type of fault objects that resolvers of this class supports
  *
@@ -21,8 +21,8 @@ operator fun <T : Any> CauseResolver<T>.invoke(fault: T) = causeOf(fault)
  */
 object CauseResolvers {
     /**
-     * Factory method for [CauseResolver]s that provide causes identified by values provided by given
-     * supplier (possible retrieved from fault result instance).
+     * Factory method for [CauseResolver]s that provide causes identified by values provided by given supplier
+     * (possible retrieved from fault result instance).
      */
     fun <T : Any> function(supplier: (T) -> String): CauseResolver<T> =
         CauseResolver { faultResult -> Cause(supplier(faultResult), faultResult) }
@@ -35,15 +35,14 @@ object CauseResolvers {
     /**
      * Factory method for [CauseResolver]s that provide causes identified by given fault result type
      * (as type's qualified name of the passed fault result).
-     * In case runtime type cannot be resolved (e.g. anonymous object passed or local class instance)
-     * type is determined from passed class.
+     * In case runtime type cannot be resolved (e.g. anonymous object passed or local class instance) type
+     * is determined from passed class.
      *
-     * @param baseType default type that should be used when fault result object type cannot be retrieved
-     *  in runtime
+     * @param defaultType type that should be used when fault result object's runtime type cannot be retrieved
      * @param T type of fault result objects supported by returned resolver
      */
-    fun <T : Any> type(baseType: KClass<T>): CauseResolver<T> {
-        val defaultClassName = baseType.qualifiedName!!
+    fun <T : Any> type(defaultType: KClass<T>): CauseResolver<T> {
+        val defaultClassName = defaultType.qualifiedName!!
         return CauseResolver { fault -> Cause(fault::class.qualifiedName ?: defaultClassName, fault) }
     }
 

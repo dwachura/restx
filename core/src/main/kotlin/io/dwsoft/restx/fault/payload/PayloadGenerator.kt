@@ -1,5 +1,6 @@
 package io.dwsoft.restx.fault.payload
 
+import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.fault.cause.CauseProcessor
@@ -47,12 +48,6 @@ sealed interface ErrorPayloadGenerator<in T : Any, out R : ErrorResponsePayload>
 }
 
 /**
- * Factories of common implementation of [ErrorPayloadGenerator]s.
- * Additional factory methods should be added as an extension functions.
- */
-object PayloadGenerators
-
-/**
  * Generator creating payloads for fault results caused by single errors.
  */
 class SingleErrorPayloadGenerator<T : Any>(
@@ -65,31 +60,31 @@ class SingleErrorPayloadGenerator<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
-            checkNotNull(config.causeResolverFactory) { "Cause resolver factory must be provided" }
-            checkNotNull(config.causeProcessorFactory) { "Cause processor factory must be provided" }
+            checkNotNull(config.causeResolverFactoryBlock) { "Cause resolver factory block not set" }
+            checkNotNull(config.causeProcessorFactoryBlock) { "Cause processor factory block not set" }
             return SingleErrorPayloadGenerator(
-                (config.causeResolverFactory!!)(CauseResolvers),
-                (config.causeProcessorFactory!!)(CauseProcessors)
+                (config.causeResolverFactoryBlock!!)(CauseResolvers),
+                (config.causeProcessorFactoryBlock!!)(CauseProcessors)
             )
         }
 
         class Config<T : Any> {
-            var causeResolverFactory: (CauseResolverFactory<T>)? = null
+            var causeResolverFactoryBlock: (CauseResolverFactoryBlock<T>)? = null
                 private set
-            var causeProcessorFactory: (CauseProcessorFactory<T>)? = null
+            var causeProcessorFactoryBlock: (CauseProcessorFactoryBlock<T>)? = null
                 private set
 
-            fun identifiedBy(causeResolverFactory: CauseResolverFactory<T>) {
-                this.causeResolverFactory = causeResolverFactory
+            fun identifiedBy(factoryBlock: CauseResolverFactoryBlock<T>) {
+                this.causeResolverFactoryBlock = factoryBlock
             }
 
             fun withId(fixedId: String) = identifiedBy { fixedId(fixedId) }
 
-            fun processedBy(causeProcessorFactory: CauseProcessorFactory<T>) {
-                this.causeProcessorFactory = causeProcessorFactory
+            fun processedBy(factoryBlock: CauseProcessorFactoryBlock<T>) {
+                this.causeProcessorFactoryBlock = factoryBlock
             }
 
-            fun processedAs(causeProcessorFactory: CauseProcessorFactory<T>) = processedBy(causeProcessorFactory)
+            fun processedAs(factoryBlock: CauseProcessorFactoryBlock<T>) = processedBy(factoryBlock)
         }
     }
 }
@@ -162,5 +157,11 @@ operator fun <T : Any, R : Any> SubErrorExtractor<T, R>.invoke(fault: T): Collec
 
 class NoSubErrorsExtracted : RestXException()
 
-typealias CauseResolverFactory<T> = CauseResolvers.() -> CauseResolver<T>
-typealias CauseProcessorFactory<T> = CauseProcessors.() -> CauseProcessor<T>
+typealias CauseResolverFactoryBlock<T> = FactoryBlock<CauseResolvers, CauseResolver<T>>
+typealias CauseProcessorFactoryBlock<T> = FactoryBlock<CauseProcessors, CauseProcessor<T>>
+
+/**
+ * Factories of common implementation of [ErrorPayloadGenerator]s.
+ * Additional factory methods should be added as an extension functions.
+ */
+object PayloadGenerators

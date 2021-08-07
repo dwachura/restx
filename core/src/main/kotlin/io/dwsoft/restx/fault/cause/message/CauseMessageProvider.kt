@@ -2,10 +2,6 @@ package io.dwsoft.restx.fault.cause.message
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.fault.cause.Cause
-import io.dwsoft.restx.fault.cause.code.CauseCodeProvider
-import io.dwsoft.restx.fault.cause.code.CauseCodeProviders
-import io.dwsoft.restx.fault.cause.code.MapBasedCauseCodeProvider
-import io.dwsoft.restx.fault.cause.code.mapBased
 import io.dwsoft.restx.initLog
 
 /**
@@ -26,29 +22,6 @@ fun interface CauseMessageProvider<in T : Any> {
 class CauseMessageProvisioningFailure(message: String) : RestXException(message)
 
 /**
- * Factories of [CauseMessageProvider]s.
- * Additional factory methods should be added as an extension functions.
- */
-/*
- * TODO: check (especially in java) whether moving standard factory methods to this object is better.
- */
-object CauseMessageProviders
-
-/**
- * Factory method that creates [CauseMessageProvider] based on passed function
- */
-fun <T : Any> CauseMessageProviders.generatedAs(provider: Cause<T>.() -> String): CauseMessageProvider<T> =
-    object : CauseMessageProvider<T> {
-        private val log = CauseMessageProvider::class.initLog()
-
-        override fun messageFor(cause: Cause<T>): String =
-            cause.provider().also {
-                log.info { "Returning message from custom provider for $cause" }
-                log.debug { "Message: $it" }
-            }
-    }
-
-/**
  * Implementation of [CauseMessageProvider] returning fixed message for any fault cause.
  */
 class FixedCauseMessageProvider(private val message: String) : CauseMessageProvider<Any> {
@@ -60,12 +33,6 @@ class FixedCauseMessageProvider(private val message: String) : CauseMessageProvi
             log.debug { "Message: $it" }
         }
 }
-
-/**
- * Factory method for [FixedCauseMessageProvider]
- */
-fun <T : Any> CauseMessageProviders.fixed(message: String): CauseMessageProvider<T> =
-    FixedCauseMessageProvider(message)
 
 /**
  * Implementation of [CauseMessageProvider] returning message based on fault id from predefined map.
@@ -93,13 +60,38 @@ class MapBasedCauseMessageProvider(private val mapping: Map<String, String>) : C
 }
 
 /**
- * Factory method for [MapBasedCauseMessageProvider]
+ * Factories of [CauseMessageProvider]s.
+ * Additional factory methods should be added as an extension functions.
  */
-fun <T : Any> CauseMessageProviders.mapBased(mapping: Map<String, String>): CauseMessageProvider<T> =
-    MapBasedCauseMessageProvider(mapping)
+object CauseMessageProviders {
+    /**
+     * Factory method that creates [CauseMessageProvider] based on passed function
+     */
+    fun <T : Any> generatedAs(provider: Cause<T>.() -> String): CauseMessageProvider<T> =
+        object : CauseMessageProvider<T> {
+            private val log = CauseMessageProvider::class.initLog()
 
-/**
- * Factory method for [MapBasedCauseMessageProvider]
- */
-fun <T : Any> CauseMessageProviders.mapBased(vararg mapEntries: Pair<String, String>): CauseMessageProvider<T> =
-    this.mapBased(mapping = mapOf(pairs = mapEntries))
+            override fun messageFor(cause: Cause<T>): String =
+                cause.provider().also {
+                    log.info { "Returning message from custom provider for $cause" }
+                    log.debug { "Message: $it" }
+                }
+        }
+
+    /**
+     * Factory method for [FixedCauseMessageProvider]
+     */
+    fun <T : Any> fixed(message: String): CauseMessageProvider<T> = FixedCauseMessageProvider(message)
+
+    /**
+     * Factory method for [MapBasedCauseMessageProvider]
+     */
+    fun <T : Any> mapBased(mapping: Map<String, String>): CauseMessageProvider<T> =
+        MapBasedCauseMessageProvider(mapping)
+
+    /**
+     * Factory method for [MapBasedCauseMessageProvider]
+     */
+    fun <T : Any> mapBased(vararg mapEntries: Pair<String, String>): CauseMessageProvider<T> =
+        this.mapBased(mapping = mapOf(pairs = mapEntries))
+}

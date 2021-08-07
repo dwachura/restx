@@ -39,3 +39,4 @@ abstract class RestXException : RuntimeException {
 }
 
 internal typealias InitBlock<T> = T.() -> Unit
+internal typealias FactoryBlock<T, R> = T.() -> R

@@ -68,35 +68,35 @@ class StandardCauseProcessorBuilderTests : FunSpec({
             StandardCauseProcessor.buildFrom(
                 Config<Any>().apply { code { dummy() } }
             )
-        }.message shouldContain "Message provider factory must be configured"
+        }.message shouldContain "Message provider factory block not set"
     }
 
     test("configured code provider factory is called") {
-        val factory = mock<AnyCauseCodeProviderFactory> {
+        val factoryBlock = mock<AnyCauseCodeProviderFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
-            code(factory)
+            code(factoryBlock)
             message { dummy() }
         }
 
         StandardCauseProcessor.buildFrom(config)
 
-        verify { factory(CauseCodeProviders) }
+        verify { factoryBlock(CauseCodeProviders) }
     }
 
     test("configured message provider factory is called") {
-        val factory = mock<AnyCauseMessageProviderFactory> {
+        val factoryBlock = mock<AnyCauseMessageProviderFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
             code { dummy() }
-            message(factory)
+            message(factoryBlock)
         }
 
         StandardCauseProcessor.buildFrom(config)
 
-        verify { factory(CauseMessageProviders) }
+        verify { factoryBlock(CauseMessageProviders) }
     }
 
     test("by default standard processor is configured with code provider based on fault id") {
@@ -111,5 +111,5 @@ class StandardCauseProcessorBuilderTests : FunSpec({
     }
 })
 
-private typealias AnyCauseCodeProviderFactory = CauseCodeProviderFactory<Any>
-private typealias AnyCauseMessageProviderFactory = CauseMessageProviderFactory<Any>
+private typealias AnyCauseCodeProviderFactoryBlock = CauseCodeProviderFactoryBlock<Any>
+private typealias AnyCauseMessageProviderFactoryBlock = CauseMessageProviderFactoryBlock<Any>

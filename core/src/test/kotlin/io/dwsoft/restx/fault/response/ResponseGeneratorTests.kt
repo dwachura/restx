@@ -59,7 +59,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
                     status { dummy() }
                 }
             )
-        }.message shouldContain "Payload generator factory must be provided"
+        }.message shouldContain "Payload generator factory block not set"
     }
 
     test("configuration without status provider factory throws exception") {
@@ -69,36 +69,36 @@ class ResponseGeneratorBuilderTests : FunSpec({
                     payload { dummy() }
                 }
             )
-        }.message shouldContain "Status provider factory must be provided"
+        }.message shouldContain "Status provider factory block not set"
     }
 
     test("configured payload generator factory is called") {
-        val factory = mock<AnyErrorPayloadGeneratorFactory> {
+        val factoryBlock = mock<AnyErrorPayloadGeneratorFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
-            payload(factory)
+            payload(factoryBlock)
             status { dummy() }
         }
 
         ResponseGenerator.buildFrom(config)
 
-        verify { factory(any()) }
+        verify { factoryBlock(any()) }
     }
 
     test("configured status provider factory is called") {
-        val factory = mock<ResponseStatusProviderFactory> {
+        val factoryBlock = mock<ResponseStatusProviderFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
         val config = Config<Any>().apply {
             payload { dummy() }
-            status(factory)
+            status(factoryBlock)
         }
 
         ResponseGenerator.buildFrom(config)
 
-        verify { factory(ResponseStatusProviders) }
+        verify { factoryBlock(ResponseStatusProviders) }
     }
 })
 
-private typealias AnyErrorPayloadGeneratorFactory = ErrorPayloadGeneratorFactory<Any>
+private typealias AnyErrorPayloadGeneratorFactoryBlock = ErrorPayloadGeneratorFactoryBlock<Any>

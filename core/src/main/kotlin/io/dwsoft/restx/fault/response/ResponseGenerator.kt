@@ -1,8 +1,7 @@
 package io.dwsoft.restx.fault.response
 
+import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.RestXException
-import io.dwsoft.restx.fault.cause.message.CauseMessageProviders
-import io.dwsoft.restx.fault.cause.message.fixed
 import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.initLog
 
@@ -32,26 +31,26 @@ class ResponseGenerator<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): ResponseGenerator<T> {
-            checkNotNull(config.errorPayloadGeneratorFactory) { "Payload generator factory must be provided" }
-            checkNotNull(config.responseStatusProviderFactory) { "Status provider factory must be provided" }
+            checkNotNull(config.errorPayloadGeneratorFactoryBlock) { "Payload generator factory block not set" }
+            checkNotNull(config.responseStatusProviderFactoryBlock) { "Status provider factory block not set" }
             return ResponseGenerator(
-                (config.errorPayloadGeneratorFactory!!)(ErrorPayloadGenerator.Builders()),
-                (config.responseStatusProviderFactory!!)(ResponseStatusProviders)
+                (config.errorPayloadGeneratorFactoryBlock!!)(ErrorPayloadGenerator.Builders()),
+                (config.responseStatusProviderFactoryBlock!!)(ResponseStatusProviders)
             )
         }
 
         class Config<T : Any> {
-            var errorPayloadGeneratorFactory: (ErrorPayloadGeneratorFactory<T>)? = null
+            var errorPayloadGeneratorFactoryBlock: (ErrorPayloadGeneratorFactoryBlock<T>)? = null
                 private set
-            var responseStatusProviderFactory: (ResponseStatusProviderFactory)? = null
+            var responseStatusProviderFactoryBlock: (ResponseStatusProviderFactoryBlock)? = null
                 private set
 
-            fun payload(errorPayloadGeneratorFactory: ErrorPayloadGeneratorFactory<T>) {
-                this.errorPayloadGeneratorFactory = errorPayloadGeneratorFactory
+            fun payload(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) {
+                this.errorPayloadGeneratorFactoryBlock = factoryBlock
             }
 
-            fun status(responseStatusProviderFactory: ResponseStatusProviderFactory) {
-                this.responseStatusProviderFactory = responseStatusProviderFactory
+            fun status(factoryBlock: ResponseStatusProviderFactoryBlock) {
+                this.responseStatusProviderFactoryBlock = factoryBlock
             }
         }
     }
@@ -74,9 +73,9 @@ object ResponseStatusProviders {
     fun providedBy(statusProvider: () -> HttpStatus) = ResponseStatusProvider { statusProvider() }
 }
 
-typealias ErrorPayloadGeneratorFactory<T> =
-        ErrorPayloadGenerator.Builders<T>.() -> ErrorPayloadGenerator<T, *>
-typealias ResponseStatusProviderFactory = ResponseStatusProviders.() -> ResponseStatusProvider
+typealias ErrorPayloadGeneratorFactoryBlock<T> =
+        FactoryBlock<ErrorPayloadGenerator.Builders<T>, ErrorPayloadGenerator<T, *>>
+typealias ResponseStatusProviderFactoryBlock = FactoryBlock<ResponseStatusProviders, ResponseStatusProvider>
 
 /**
  * Extension function serving as a shortcut to configure response generator builder to create
