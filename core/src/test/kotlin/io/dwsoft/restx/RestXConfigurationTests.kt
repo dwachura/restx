@@ -13,6 +13,23 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 
 class RestXConfigurationTests : FunSpec({
+    test("()") {
+        RestX.Companion.respondTo<Exception> {
+            payload {
+                error {
+                    identifiedBy { type() }
+                    processedBy {
+                        standard {
+                            code { sameAsCauseId() }
+                            message { generatedAs { context.message!! } }
+                        }
+                    }
+                }
+            }
+            status { of(500) }
+        }
+    }
+
     test("generator of single error payloads with code the same as object type is created") {
         val generator = RestX.respondTo<Any> {
             payload {

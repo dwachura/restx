@@ -1,6 +1,8 @@
 package io.dwsoft.restx
 
 import io.dwsoft.restx.fault.response.ResponseGenerator
+import kotlin.jvm.internal.Reflection
+import kotlin.reflect.KClass
 
 /**
  * Class serving as an entry point to [ResponseGenerator] construction.
@@ -39,4 +41,15 @@ abstract class RestXException : RuntimeException {
 }
 
 internal typealias InitBlock<T> = T.() -> Unit
+fun interface Initializer<T> {
+    operator fun invoke(config: T)
+}
+fun <T> Initializer<T>.init(): InitBlock<T> = { this@init(this) }
+
 internal typealias FactoryBlock<T, R> = T.() -> R
+fun interface Factory<T, R> {
+    operator fun invoke(factories: T): R
+}
+fun <T, R> Factory<T, R>.get(): FactoryBlock<T, R> = { this@get(this) }
+
+fun <T : Any> of(javaClass: Class<T>): KClass<T> = Reflection.getOrCreateKotlinClass(javaClass) as KClass<T>
