@@ -74,14 +74,14 @@ class SingleErrorPayloadGenerator<T : Any>(
             var causeProcessorFactoryBlock: (CauseProcessorFactoryBlock<T>)? = null
                 private set
 
-            fun identifiedBy(factoryBlock: CauseResolverFactoryBlock<T>) {
-                this.causeResolverFactoryBlock = factoryBlock
+            fun identifiedBy(factoryBlock: CauseResolverFactoryBlock<T>) = this.apply {
+                causeResolverFactoryBlock = factoryBlock
             }
 
             fun withId(fixedId: String) = identifiedBy { fixedId(fixedId) }
 
-            fun processedBy(factoryBlock: CauseProcessorFactoryBlock<T>) {
-                this.causeProcessorFactoryBlock = factoryBlock
+            fun processedBy(factoryBlock: CauseProcessorFactoryBlock<T>) = this.apply {
+                causeProcessorFactoryBlock = factoryBlock
             }
 
             fun processedAs(factoryBlock: CauseProcessorFactoryBlock<T>) = processedBy(factoryBlock)
@@ -127,19 +127,18 @@ class MultiErrorPayloadGenerator<T : Any, R : Any>(
             var subErrorPayloadGenerator: (SingleErrorPayloadGenerator<R>)? = null
                 private set
 
-            fun extractedAs(subErrorExtractor: SubErrorExtractor<T, R>) {
-                this.subErrorExtractor = subErrorExtractor
+            fun extractedAs(extractor: SubErrorExtractor<T, R>) = this.apply {
+                subErrorExtractor = extractor
             }
 
-            fun handledBy(subErrorPayloadGenerator: SingleErrorPayloadGenerator<R>) {
-                this.subErrorPayloadGenerator = subErrorPayloadGenerator
+            fun handledBy(generator: SingleErrorPayloadGenerator<R>) = this.apply {
+                subErrorPayloadGenerator = generator
             }
 
-            fun whichAre(initBlock: InitBlock<SingleErrorPayloadGenerator.Builder.Config<R>>) {
+            fun whichAre(initBlock: InitBlock<SingleErrorPayloadGenerator.Builder.Config<R>>) = handledBy(
                 SingleErrorPayloadGenerator.Builder.Config<R>().apply(initBlock)
                     .let { SingleErrorPayloadGenerator.buildFrom(it) }
-                    .also { handledBy(it) }
-            }
+            )
         }
     }
 }
