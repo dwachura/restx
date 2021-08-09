@@ -70,12 +70,12 @@ class StandardCauseProcessor<T : Any>(
             var causeMessageProviderFactoryBlock: (CauseMessageProviderFactoryBlock<T>)? = null
                 private set
 
-            fun code(factoryBlock: CauseCodeProviderFactoryBlock<T>) {
-                this.causeCodeProviderFactoryBlock = factoryBlock
+            fun code(factoryBlock: CauseCodeProviderFactoryBlock<T>) = this.apply {
+                causeCodeProviderFactoryBlock = factoryBlock
             }
 
-            fun message(factoryBlock: CauseMessageProviderFactoryBlock<T>) {
-                this.causeMessageProviderFactoryBlock = factoryBlock
+            fun message(factoryBlock: CauseMessageProviderFactoryBlock<T>) = this.apply {
+                causeMessageProviderFactoryBlock = factoryBlock
             }
         }
     }

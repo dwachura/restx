@@ -45,12 +45,12 @@ class ResponseGenerator<T : Any>(
             var responseStatusProviderFactoryBlock: (ResponseStatusProviderFactoryBlock)? = null
                 private set
 
-            fun payload(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) {
-                this.errorPayloadGeneratorFactoryBlock = factoryBlock
+            fun payload(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) = this.apply {
+                errorPayloadGeneratorFactoryBlock = factoryBlock
             }
 
-            fun status(factoryBlock: ResponseStatusProviderFactoryBlock) {
-                this.responseStatusProviderFactoryBlock = factoryBlock
+            fun status(factoryBlock: ResponseStatusProviderFactoryBlock) = this.apply {
+                responseStatusProviderFactoryBlock = factoryBlock
             }
         }
     }
