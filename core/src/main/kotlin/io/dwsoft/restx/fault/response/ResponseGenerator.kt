@@ -39,7 +39,7 @@ class ResponseGenerator<T : Any>(
             )
         }
 
-        class Config<T : Any> {
+        open class Config<T : Any> {
             var errorPayloadGeneratorFactoryBlock: (ErrorPayloadGeneratorFactoryBlock<T>)? = null
                 private set
             var responseStatusProviderFactoryBlock: (ResponseStatusProviderFactoryBlock)? = null

@@ -68,7 +68,7 @@ class SingleErrorPayloadGenerator<T : Any>(
             )
         }
 
-        class Config<T : Any> {
+        open class Config<T : Any> {
             var causeResolverFactoryBlock: (CauseResolverFactoryBlock<T>)? = null
                 private set
             var causeProcessorFactoryBlock: (CauseProcessorFactoryBlock<T>)? = null

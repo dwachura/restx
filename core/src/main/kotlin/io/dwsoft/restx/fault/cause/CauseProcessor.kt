@@ -64,7 +64,7 @@ class StandardCauseProcessor<T : Any>(
          * If not explicitly [configured][code], objects produced by such processor have their
          * code equal to [id of the fault object][Cause.id] for which are generated.
          */
-        class Config<T : Any> {
+        open class Config<T : Any> {
             var causeCodeProviderFactoryBlock: CauseCodeProviderFactoryBlock<T> = { generatedAs { id } }
                 private set
             var causeMessageProviderFactoryBlock: (CauseMessageProviderFactoryBlock<T>)? = null
