@@ -17,7 +17,7 @@ fun interface CauseResolver<T : Any> {
 operator fun <T : Any> CauseResolver<T>.invoke(fault: T) = causeOf(fault)
 
 /**
- * Factories of cause resolvers
+ * Factories of [CauseResolver]s.
  */
 object CauseResolvers {
     /**
@@ -34,7 +34,7 @@ object CauseResolvers {
 
     /**
      * Factory method for [CauseResolver]s that provide causes identified by given fault result type
-     * (as type's qualified name of the passed fault result).
+     * (as type's [qualified/canonical][Class.getCanonicalName] name of the passed fault result).
      * In case runtime type cannot be resolved (e.g. anonymous object passed or local class instance) type
      * is determined from passed class.
      *
@@ -42,6 +42,7 @@ object CauseResolvers {
      * @param T type of fault result objects supported by returned resolver
      */
     fun <T : Any> type(defaultType: KClass<T>): CauseResolver<T> {
+        requireNotNull(defaultType.qualifiedName) { "Default type [${defaultType.java.name}] doesn't have resolvable canonical name" }
         val defaultClassName = defaultType.qualifiedName!!
         return CauseResolver { fault -> Cause(fault::class.qualifiedName ?: defaultClassName, fault) }
     }

@@ -1,13 +1,10 @@
 package io.dwsoft.restx.fault.cause
 
-import io.dwsoft.restx.fault.dummy
-import io.dwsoft.restx.fault.mock
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.verify
+import io.kotest.matchers.string.shouldContain
 
 class CauseResolverFactoriesTests : FunSpec({
     test("single cause with fixed id is returned") {
@@ -37,6 +34,18 @@ class CauseResolverFactoriesTests : FunSpec({
         val causeId = resolver(object : TestFaultClass() {})
 
         causeId.id shouldBe TestFaultClass.classQualifiedName()
+    }
+
+    test("creation of resolver with unresolvable default type throws exception") {
+        class LocalTypeWithRuntimeUnresolvableName
+
+        shouldThrow<IllegalArgumentException> {
+            CauseResolvers.type<LocalTypeWithRuntimeUnresolvableName>()
+        }.apply {
+            message shouldContain Regex("Default type \\[.*] doesn't have resolvable canonical name")
+            message shouldContain LocalTypeWithRuntimeUnresolvableName::class.java.name
+        }
+
     }
 
     test("cause with id supplied by function is created") {

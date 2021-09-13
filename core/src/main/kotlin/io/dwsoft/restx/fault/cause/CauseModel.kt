@@ -1,6 +1,5 @@
 package io.dwsoft.restx.fault.cause
 
-
 /**
  * Class that holds info that allows to identify specific reason of failure.
  *

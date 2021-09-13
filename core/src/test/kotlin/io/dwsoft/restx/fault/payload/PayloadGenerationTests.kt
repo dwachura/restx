@@ -52,7 +52,7 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
         shouldThrow<IllegalStateException> {
             SingleErrorPayloadGenerator.buildFrom(
                 SingleErrorPayloadGeneratorConfig<Any>().apply {
-                    processedBy { dummy() }
+                    processedAs { dummy() }
                 }
             )
         }.message shouldContain "Cause resolver factory block not set"
@@ -74,7 +74,7 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
         }
         val config = SingleErrorPayloadGeneratorConfig<Any>().apply {
             identifiedBy(factoryBlock)
-            processedBy { dummy() }
+            processedAs { dummy() }
         }
 
         SingleErrorPayloadGenerator.buildFrom(config)
@@ -88,7 +88,7 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
         }
         val config = SingleErrorPayloadGeneratorConfig<Any>().apply {
             identifiedBy { dummy() }
-            processedBy(factoryBlock)
+            processedAs(factoryBlock)
         }
 
         SingleErrorPayloadGenerator.buildFrom(config)
@@ -133,7 +133,7 @@ class MultiErrorPayloadGeneratorTests : FunSpec({
     }
 
     test("multi error payload containing errors generated for sub-errors is returned") {
-        val expectedPayloadContent = listOf<ApiError>(dummy(), dummy())
+        val expectedPayloadContent = listOf<SingleErrorPayload>(dummy(), dummy())
         val subErrorPayloadGenerator = mock<SingleErrorPayloadGenerator<Any>> {
             every { this@mock.payloadOf(any()) } returnsMany expectedPayloadContent
         }
