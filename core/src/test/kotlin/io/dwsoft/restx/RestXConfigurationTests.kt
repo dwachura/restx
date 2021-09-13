@@ -3,8 +3,10 @@ package io.dwsoft.restx
 import io.dwsoft.restx.fault.cause.code
 import io.dwsoft.restx.fault.cause.message
 import io.dwsoft.restx.fault.dummy
-import io.dwsoft.restx.fault.payload.ApiError
 import io.dwsoft.restx.fault.payload.MultiErrorPayload
+import io.dwsoft.restx.fault.payload.OperationError
+import io.dwsoft.restx.fault.payload.RequestDataError
+import io.dwsoft.restx.fault.payload.Source
 import io.dwsoft.restx.fault.response.HttpStatus
 import io.dwsoft.restx.fault.response.status
 import io.kotest.core.spec.style.FunSpec
@@ -18,7 +20,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     identifiedBy { type() }
-                    processedBy { standard {
+                    processedAs { operationError {
                         code { sameAsCauseId() }
                         message { dummy() }
                     } }
@@ -28,7 +30,7 @@ class RestXConfigurationTests : FunSpec({
         }
 
         generator.responseOf(Any())
-            .payload.shouldBeTypeOf<ApiError>()
+            .payload.shouldBeTypeOf<OperationError>()
             .apply { code shouldBe Any::class.qualifiedName }
     }
 
@@ -38,7 +40,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     identifiedBy { type() }
-                    processedBy { standard {
+                    processedAs { operationError {
                         code(expectedCode)
                         message { dummy() }
                     } }
@@ -48,7 +50,7 @@ class RestXConfigurationTests : FunSpec({
         }
 
         generator.responseOf(Any())
-            .payload.shouldBeTypeOf<ApiError>()
+            .payload.shouldBeTypeOf<OperationError>()
             .apply { code shouldBe expectedCode }
     }
 
@@ -58,7 +60,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     withId("dummy")
-                    processedBy { standard {
+                    processedAs { operationError {
                         code { generatedAs { expectedCode } }
                         message { dummy() }
                     } }
@@ -68,7 +70,7 @@ class RestXConfigurationTests : FunSpec({
         }
 
         generator.responseOf(Any())
-            .payload.shouldBeTypeOf<ApiError>()
+            .payload.shouldBeTypeOf<OperationError>()
             .apply { code shouldBe expectedCode }
     }
 
@@ -79,7 +81,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     withId(causeId)
-                    processedBy { standard {
+                    processedAs { operationError {
                         code { mapBased(causeId to expectedCode) }
                         message { dummy() }
                     } }
@@ -89,7 +91,7 @@ class RestXConfigurationTests : FunSpec({
         }
 
         generator.responseOf(Any())
-            .payload.shouldBeTypeOf<ApiError>()
+            .payload.shouldBeTypeOf<OperationError>()
             .apply { code shouldBe expectedCode }
     }
 
@@ -99,7 +101,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     identifiedBy { type() }
-                    processedBy { standard {
+                    processedAs { operationError {
                         message(expectedMessage)
                     } }
                 }
@@ -108,7 +110,7 @@ class RestXConfigurationTests : FunSpec({
         }
 
         generator.responseOf(Any())
-            .payload.shouldBeTypeOf<ApiError>()
+            .payload.shouldBeTypeOf<OperationError>()
             .apply { message shouldBe expectedMessage }
     }
 
@@ -118,7 +120,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     identifiedBy { type() }
-                    processedBy { standard {
+                    processedAs { operationError {
                         message { generatedAs { context.message!! } }
                     } }
                 }
@@ -128,7 +130,7 @@ class RestXConfigurationTests : FunSpec({
 
         val response = generator.responseOf(faultResult)
 
-        response.payload.shouldBeTypeOf<ApiError>()
+        response.payload.shouldBeTypeOf<OperationError>()
             .apply { message shouldBe faultResult.message }
     }
 
@@ -139,7 +141,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     withId(causeId)
-                    processedBy { standard {
+                    processedAs { operationError {
                         message { mapBased(causeId to expectedMessage) }
                     } }
                 }
@@ -149,7 +151,7 @@ class RestXConfigurationTests : FunSpec({
 
         val response = generator.responseOf(Any())
 
-        response.payload.shouldBeTypeOf<ApiError>()
+        response.payload.shouldBeTypeOf<OperationError>()
             .apply { message shouldBe expectedMessage }
     }
 
@@ -159,7 +161,7 @@ class RestXConfigurationTests : FunSpec({
             payload {
                 error {
                     identifiedBy { type() }
-                    processedBy { standard {
+                    processedAs { operationError {
                         message { dummy() }
                     } }
                 }
@@ -170,6 +172,36 @@ class RestXConfigurationTests : FunSpec({
         val response = generator.responseOf(Any())
 
         response.status shouldBe HttpStatus(status)
+    }
+
+    test("generator of single error payloads for invalid request data errors is created") {
+        class InvalidInput(val type: Source.Type, val location: String, val message: String)
+        val expectedSource = Source.queryParam("queryParam1")
+        val expectedMessage = "Invalid value in query param"
+        val generator = RestX.respondTo<InvalidInput> {
+            payload {
+                error {
+                    identifiedBy { fixedId(InvalidInput::class.simpleName!!) }
+                    processedAs {
+                        requestDataError {
+                            message { generatedAs { context.message } }
+                            invalidValue { resolvedBy { cause ->
+                                cause.context.let { it.type.toSource(it.location) }
+                            } }
+                        }
+                    }
+                }
+            }
+            status(400)
+        }
+
+        val response = generator.responseOf(
+            InvalidInput(expectedSource.type, expectedSource.location, expectedMessage)
+        )
+
+        response.payload.shouldBeTypeOf<RequestDataError>().apply {
+            source shouldBe expectedSource
+        }
     }
 
     test("generator of multi-error payload is created") {
@@ -183,8 +215,8 @@ class RestXConfigurationTests : FunSpec({
                 extractedAs { it.errors.asList() }
                 whichAre {
                     identifiedBy { type() }
-                    processedBy {
-                        standard {
+                    processedAs {
+                        operationError {
                             message { generatedAs { context.message!! } }
                         }
                     }
@@ -195,13 +227,12 @@ class RestXConfigurationTests : FunSpec({
 
         val response = generator.responseOf(fault)
 
-
         response.status shouldBe HttpStatus(500)
         response.payload.shouldBeTypeOf<MultiErrorPayload>()
             .apply { errors shouldContainInOrder listOf(
-                ApiError(subError1::class.qualifiedName!!, subError1.message!!),
-                ApiError(subError2::class.qualifiedName!!, subError2.message!!),
-                ApiError(subError3::class.qualifiedName!!, subError3.message!!)
+                OperationError(subError1::class.qualifiedName!!, subError1.message!!),
+                OperationError(subError2::class.qualifiedName!!, subError2.message!!),
+                OperationError(subError3::class.qualifiedName!!, subError3.message!!)
             ) }
     }
 })

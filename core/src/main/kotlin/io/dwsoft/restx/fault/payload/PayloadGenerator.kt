@@ -53,8 +53,8 @@ sealed interface ErrorPayloadGenerator<in T : Any, out R : ErrorResponsePayload>
 class SingleErrorPayloadGenerator<T : Any>(
     private val causeResolver: CauseResolver<T>,
     private val processor: CauseProcessor<T>
-) : ErrorPayloadGenerator<T, ApiError> {
-    override fun payloadOf(fault: T): ApiError {
+) : ErrorPayloadGenerator<T, SingleErrorPayload> {
+    override fun payloadOf(fault: T): SingleErrorPayload {
         return processor.process(causeResolver.causeOf(fault))
     }
 
@@ -80,11 +80,9 @@ class SingleErrorPayloadGenerator<T : Any>(
 
             fun withId(fixedId: String) = identifiedBy { fixedId(fixedId) }
 
-            fun processedBy(factoryBlock: CauseProcessorFactoryBlock<T>) = this.apply {
+            fun processedAs(factoryBlock: CauseProcessorFactoryBlock<T>) = this.apply {
                 causeProcessorFactoryBlock = factoryBlock
             }
-
-            fun processedAs(factoryBlock: CauseProcessorFactoryBlock<T>) = processedBy(factoryBlock)
         }
     }
 }
@@ -99,6 +97,7 @@ class MultiErrorPayloadGenerator<T : Any, R : Any>(
     private val subErrorPayloadGenerator: SingleErrorPayloadGenerator<R>
 ) : ErrorPayloadGenerator<T, ErrorResponsePayload> {
     private val log = initLog()
+
     /**
      * @throws NoSubErrorsExtracted in case [extractor][subErrorExtractor] returns no sub-errors
      */

@@ -51,13 +51,15 @@ internal typealias InitBlock<T> = T.() -> Unit
 fun interface Initializer<T> {
     operator fun invoke(config: T)
 }
-fun <T> Initializer<T>.init(): InitBlock<T> = { this@init(this) }
+fun <T> Initializer<T>.initBy(): InitBlock<T> = { this@initBy(this) }
+fun <T> Initializer<T>.init(): InitBlock<T> = initBy()
 
 internal typealias FactoryBlock<T, R> = T.() -> R
 fun interface Factory<T, R> {
     operator fun invoke(factories: T): R
 }
-fun <T, R> Factory<T, R>.make(): FactoryBlock<T, R> = { this@make(this) }
+fun <T, R> Factory<T, R>.madeBy(): FactoryBlock<T, R> = { this@madeBy(this) }
+fun <T, R> Factory<T, R>.make(): FactoryBlock<T, R> = madeBy()
 
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> type(javaClass: Class<T>): KClass<T> = Reflection.getOrCreateKotlinClass(javaClass) as KClass<T>

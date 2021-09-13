@@ -69,7 +69,6 @@ fun interface ResponseStatusProvider {
 object ResponseStatusProviders {
     fun of(status: Int) = ResponseStatusProvider { HttpStatus(status) }
     fun of(status: () -> Int) = ResponseStatusProvider { HttpStatus(status()) }
-
     fun providedBy(statusProvider: () -> HttpStatus) = ResponseStatusProvider { statusProvider() }
 }
 
