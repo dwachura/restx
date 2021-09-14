@@ -1,6 +1,8 @@
 package io.dwsoft.restx
 
+import io.dwsoft.restx.fault.response.CompositeResponseGenerator
 import io.dwsoft.restx.fault.response.ResponseGenerator
+import io.dwsoft.restx.fault.response.SimpleResponseGenerator
 import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
@@ -9,28 +11,51 @@ import kotlin.reflect.KClass
  */
 object RestX {
     /**
-     * Entry method to fluently configure [ResponseGenerator]s.
+     * Entry method to fluently configure [SimpleResponseGenerator]s.
      *
      * @throws RestXConfigurationFailure in case of any errors during creation of a generator
      */
-    fun <T : Any> respondTo(
-        initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
-    ): ResponseGenerator<T> = runCatching {
-        ResponseGenerator.Builder.Config<T>()
+    fun <T : Any> respondTo(initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>) = buildGenerator {
+        SimpleResponseGenerator.Builder.Config<T>()
             .apply(initBlock)
-            .let { ResponseGenerator.buildFrom(it) }
+            .let { SimpleResponseGenerator.buildFrom(it) }
     }
-        .onFailure { RestXConfigurationFailure(it) }
-        .getOrThrow()
+
+    private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
+        runCatching(buildFunction).onFailure { RestXConfigurationFailure(it) }.getOrThrow()
 
     /**
-     * Overloaded version of [respondTo]. May be more readable in some situations.
+     * Delegate of [respondTo].
+     */
+    fun <T : Any> generator(initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>) = respondTo(initBlock)
+
+    /**
+     * Delegate of [respondTo]. May be more readable in some situations.
      */
     @Suppress("UNUSED_PARAMETER")
-    fun <T : Any> respondTo(
+    fun <T : Any> respondToFaultOfType(
         faultObjectsType: KClass<T>,
-        initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
+        initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>
     ): ResponseGenerator<T> = respondTo(initBlock)
+
+    /**
+     * Delegate of [respondToFaultOfType].
+     */
+    fun <T : Any> generator(
+        faultObjectsType: KClass<T>,
+        initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>
+    ) = respondToFaultOfType(faultObjectsType, initBlock)
+
+    /**
+     * Entry method to fluently configure [CompositeResponseGenerator]s.
+     *
+     * @throws RestXConfigurationFailure in case of any errors during creation of a generator
+     */
+    fun compose(initBlock: InitBlock<CompositeResponseGenerator.Builder.Config>) = buildGenerator {
+        CompositeResponseGenerator.Builder.Config()
+            .apply(initBlock)
+            .let { CompositeResponseGenerator.buildFrom(it) }
+    }
 }
 
 class RestXConfigurationFailure(cause: Throwable) : RestXException("RestX configuration failed", cause)

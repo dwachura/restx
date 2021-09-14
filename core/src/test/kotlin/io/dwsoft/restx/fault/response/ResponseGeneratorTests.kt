@@ -4,7 +4,7 @@ import io.dwsoft.restx.fault.dummy
 import io.dwsoft.restx.fault.mock
 import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.fault.payload.ErrorResponsePayload
-import io.dwsoft.restx.fault.response.ResponseGenerator.Builder.Config
+import io.dwsoft.restx.fault.response.SimpleResponseGenerator.Builder.Config
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -12,14 +12,14 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.verify
 
-class ResponseGeneratorTests : FunSpec({
+class SimpleResponseGeneratorTests : FunSpec({
     test("payload generator is called") {
         val fault = Any()
         val generator = mock<ErrorPayloadGenerator<Any, *>> {
             every { payloadOf(fault) } returns dummy()
         }
 
-        ResponseGenerator(generator, dummy()).responseOf(fault)
+        SimpleResponseGenerator(generator, dummy()).responseOf(fault)
 
         verify { generator.payloadOf(fault) }
     }
@@ -32,14 +32,14 @@ class ResponseGeneratorTests : FunSpec({
             every { get() } returns dummy()
         }
 
-        ResponseGenerator(generator, statusProvider).responseOf(Any())
+        SimpleResponseGenerator(generator, statusProvider).responseOf(Any())
 
         verify { statusProvider.get() }
     }
 
     test("fault is converted to response") {
         val payload = dummy<ErrorResponsePayload>()
-        val generator = ResponseGenerator(
+        val generator = SimpleResponseGenerator(
             mock<ErrorPayloadGenerator<Any, *>> {
                 every { payloadOf(any()) } returns payload
             }
@@ -51,10 +51,10 @@ class ResponseGeneratorTests : FunSpec({
     }
 })
 
-class ResponseGeneratorBuilderTests : FunSpec({
+class SimpleResponseGeneratorBuilderTests : FunSpec({
     test("configuration without payload generator factory throws exception") {
         shouldThrow<IllegalArgumentException> {
-            ResponseGenerator.buildFrom(
+            SimpleResponseGenerator.buildFrom(
                 Config<Any>().apply {
                     status { dummy() }
                 }
@@ -64,7 +64,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
 
     test("configuration without status provider factory throws exception") {
         shouldThrow<IllegalArgumentException> {
-            ResponseGenerator.buildFrom(
+            SimpleResponseGenerator.buildFrom(
                 Config<Any>().apply {
                     payload { dummy() }
                 }
@@ -81,7 +81,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
             status { dummy() }
         }
 
-        ResponseGenerator.buildFrom(config)
+        SimpleResponseGenerator.buildFrom(config)
 
         verify { factoryBlock(any()) }
     }
@@ -95,7 +95,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
             status(factoryBlock)
         }
 
-        ResponseGenerator.buildFrom(config)
+        SimpleResponseGenerator.buildFrom(config)
 
         verify { factoryBlock(ResponseStatusProviders) }
     }
