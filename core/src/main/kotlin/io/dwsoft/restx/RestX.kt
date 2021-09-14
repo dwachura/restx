@@ -5,34 +5,32 @@ import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
 /**
- * Class serving as an entry point to [ResponseGenerator] construction.
+ * Entry point to [ResponseGenerator] construction.
  */
-class RestX {
-    companion object {
-        /**
-         * Entry method to fluently configure [ResponseGenerator]s.
-         *
-         * @throws RestXConfigurationFailure in case of any errors during creation of a generator
-         */
-        fun <T : Any> respondTo(
-            initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
-        ): ResponseGenerator<T> = runCatching {
-            ResponseGenerator.Builder.Config<T>()
-                .apply(initBlock)
-                .let { ResponseGenerator.buildFrom(it) }
-        }
-            .onFailure { RestXConfigurationFailure(it) }
-            .getOrThrow()
-
-        /**
-         * Overloaded version of [respondTo]. May be more readable in some situations.
-         */
-        @Suppress("UNUSED_PARAMETER")
-        fun <T : Any> respondTo(
-            faultObjectsType: KClass<T>,
-            initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
-        ): ResponseGenerator<T> = respondTo(initBlock)
+object RestX {
+    /**
+     * Entry method to fluently configure [ResponseGenerator]s.
+     *
+     * @throws RestXConfigurationFailure in case of any errors during creation of a generator
+     */
+    fun <T : Any> respondTo(
+        initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
+    ): ResponseGenerator<T> = runCatching {
+        ResponseGenerator.Builder.Config<T>()
+            .apply(initBlock)
+            .let { ResponseGenerator.buildFrom(it) }
     }
+        .onFailure { RestXConfigurationFailure(it) }
+        .getOrThrow()
+
+    /**
+     * Overloaded version of [respondTo]. May be more readable in some situations.
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun <T : Any> respondTo(
+        faultObjectsType: KClass<T>,
+        initBlock: InitBlock<ResponseGenerator.Builder.Config<T>>
+    ): ResponseGenerator<T> = respondTo(initBlock)
 }
 
 class RestXConfigurationFailure(cause: Throwable) : RestXException("RestX configuration failed", cause)

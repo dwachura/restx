@@ -47,7 +47,7 @@ abstract class StandardCauseProcessorTestsBase(
             dummy()
         )
 
-        shouldThrow<CauseProcessingFailed> { sut.process(Any().causeId("")) }
+        shouldThrow<CauseProcessingFailure> { sut.process(Any().causeId("")) }
     }
 
     test("exception is thrown in case of message provider failure") {
@@ -56,7 +56,7 @@ abstract class StandardCauseProcessorTestsBase(
             mock { every { messageFor(any()) } throws RuntimeException() }
         )
 
-        shouldThrow<CauseProcessingFailed> { sut.process(Any().causeId("")) }
+        shouldThrow<CauseProcessingFailure> { sut.process(Any().causeId("")) }
     }
 
     this.apply(additionalTestsInitBlock)
@@ -105,7 +105,7 @@ class RequestDataErrorProcessorTests : StandardCauseProcessorTestsBase(
             val failingDataErrorSourceProvider =
                 mock<DataErrorSourceResolver<Any>> { every { sourceOf(any()) } throws RuntimeException() }
 
-            shouldThrow<CauseProcessingFailed> {
+            shouldThrow<CauseProcessingFailure> {
                 RequestDataErrorProcessor(dummy(), dummy(), failingDataErrorSourceProvider)
                     .process(Any().causeId(""))
             }

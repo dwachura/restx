@@ -22,12 +22,12 @@ fun interface CauseProcessor<T : Any> {
     /**
      * Method responsible for converting [Cause] into corresponding [SingleErrorPayload].
      *
-     * @throws CauseProcessingFailed in case of processing failure
+     * @throws CauseProcessingFailure in case of processing failure
      */
     fun process(cause: Cause<T>): SingleErrorPayload
 }
 
-class CauseProcessingFailed(throwable: Throwable) : RestXException(throwable)
+class CauseProcessingFailure(throwable: Throwable) : RestXException(throwable)
 
 /**
  * RestX's standard implementation of payload's [code][SingleErrorPayload.code]
@@ -44,7 +44,7 @@ private fun <T : Any> createStandardPayloadCodeAndMessageProvider(
         )
     }.fold(
         onSuccess = { it },
-        onFailure = { throw CauseProcessingFailed(it) }
+        onFailure = { throw CauseProcessingFailure(it) }
     )
 }
 
@@ -136,7 +136,7 @@ class RequestDataErrorProcessor<T : Any>(
             dataErrorSourceResolver.sourceOf(cause)
         }.fold(
             onSuccess = { it },
-            onFailure = { throw CauseProcessingFailed(it) }
+            onFailure = { throw CauseProcessingFailure(it) }
         )
         return RequestDataError(code, message, source)
     }

@@ -6,7 +6,7 @@ import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.initLog
 
 /**
- * RestX library's entry point to handle fault results. That is, to convert
+ * Library's main component serving as an entry point to handle fault results of given type. That is, to convert
  * fault result emitted by the application's logic into HTTP response model.
  *
  * @param T type of fault objects that generator is able to work with
