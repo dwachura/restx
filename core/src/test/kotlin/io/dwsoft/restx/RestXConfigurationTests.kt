@@ -8,11 +8,13 @@ import io.dwsoft.restx.fault.payload.OperationError
 import io.dwsoft.restx.fault.payload.RequestDataError
 import io.dwsoft.restx.fault.payload.Source
 import io.dwsoft.restx.fault.response.HttpStatus
+import io.dwsoft.restx.fault.response.ResponseGenerator
 import io.dwsoft.restx.fault.response.status
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
+import io.mockk.verify
 
 class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with code the same as object type is created") {
@@ -234,5 +236,31 @@ class RestXConfigurationTests : FunSpec({
                 OperationError(subError2::class.qualifiedName!!, subError2.message!!),
                 OperationError(subError3::class.qualifiedName!!, subError3.message!!)
             ) }
+    }
+
+    test("composite generator is created") {
+        val exceptionFault = Exception()
+        val generatorForExceptionFault = dummy<ResponseGenerator<Exception>>()
+        val runtimeExceptionFault = RuntimeException()
+        val generatorForRuntimeExceptionFault = dummy<ResponseGenerator<RuntimeException>>()
+        val stringFault = "fault"
+        val generatorForStringFault = dummy<ResponseGenerator<String>>()
+        val compositeGenerator = RestX.compose {
+            registeredByFaultType {
+                register { generatorForExceptionFault }
+                register { generatorForRuntimeExceptionFault }
+                register { generatorForStringFault }
+            }
+        }
+
+        compositeGenerator.responseOf(exceptionFault)
+        compositeGenerator.responseOf(runtimeExceptionFault)
+        compositeGenerator.responseOf(stringFault)
+
+        verify {
+            generatorForExceptionFault.responseOf(exceptionFault)
+            generatorForRuntimeExceptionFault.responseOf(runtimeExceptionFault)
+            generatorForStringFault.responseOf(stringFault)
+        }
     }
 })
