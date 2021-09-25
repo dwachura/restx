@@ -15,8 +15,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.verify
-import io.dwsoft.restx.fault.payload.SingleErrorPayloadGenerator.Builder.Config as SingleErrorPayloadGeneratorConfig
 import io.dwsoft.restx.fault.payload.MultiErrorPayloadGenerator.Builder.Config as MultiErrorPayloadGeneratorConfig
+import io.dwsoft.restx.fault.payload.SingleErrorPayloadGenerator.Builder.Config as SingleErrorPayloadGeneratorConfig
 
 class SingleErrorPayloadGeneratorTests : FunSpec({
     test("fault cause info resolver is called") {
@@ -49,7 +49,7 @@ class SingleErrorPayloadGeneratorTests : FunSpec({
 
 class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
     test("configuration without cause resolver factory throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             SingleErrorPayloadGenerator.buildFrom(
                 SingleErrorPayloadGeneratorConfig<Any>().apply {
                     processedAs { dummy() }
@@ -59,7 +59,7 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
     }
 
     test("configuration without cause processor factory throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             SingleErrorPayloadGenerator.buildFrom(
                 SingleErrorPayloadGeneratorConfig<Any>().apply {
                     identifiedBy { dummy() }
@@ -150,7 +150,7 @@ class MultiErrorPayloadGeneratorTests : FunSpec({
 
 class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
     test("configuration without sub-error extractor throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             MultiErrorPayloadGenerator.buildFrom(
                 MultiErrorPayloadGeneratorConfig<Any, Any>().apply {
                     handledBy(dummy())
@@ -160,7 +160,7 @@ class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
     }
 
     test("configuration without sub-error payload generator throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             MultiErrorPayloadGenerator.buildFrom(
                 MultiErrorPayloadGeneratorConfig<Any, Any>().apply {
                     extractedAs { dummy() }

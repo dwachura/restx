@@ -42,8 +42,10 @@ object CauseResolvers {
      * @param T type of fault result objects supported by returned resolver
      */
     fun <T : Any> type(defaultType: KClass<T>): CauseResolver<T> {
-        requireNotNull(defaultType.qualifiedName) { "Default type [${defaultType.java.name}] doesn't have resolvable canonical name" }
-        val defaultClassName = defaultType.qualifiedName!!
+        val defaultClassName = defaultType.qualifiedName
+            ?: throw IllegalArgumentException(
+                "Default type [${defaultType.java.name}] doesn't have resolvable canonical name"
+            )
         return CauseResolver { fault -> Cause(fault::class.qualifiedName ?: defaultClassName, fault) }
     }
 

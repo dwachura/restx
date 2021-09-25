@@ -121,7 +121,7 @@ abstract class StandardCauseProcessorBuilderTestsBase(
     test("configuration without message provider factory throws exception") {
         val config = createConfig(dummy(), null)
 
-        shouldThrow<IllegalStateException> { buildProcessor(config) }
+        shouldThrow<IllegalArgumentException> { buildProcessor(config) }
             .message shouldContain "Message provider factory block not set"
     }
 
@@ -185,7 +185,7 @@ class RequestDataErrorProcessorBuilderTests : StandardCauseProcessorBuilderTests
     { RequestDataErrorProcessor.buildFrom(it as RequestDataErrorProcessorBuilderConfig<Any>) },
     {
         test("configuration without data error source provider factory throws exception") {
-            shouldThrow<IllegalStateException> {
+            shouldThrow<IllegalArgumentException> {
                 RequestDataErrorProcessor.buildFrom(
                     RequestDataErrorProcessor.Builder.Config<Any>().apply {
                         code { dummy() }

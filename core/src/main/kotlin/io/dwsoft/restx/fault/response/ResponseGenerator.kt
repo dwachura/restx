@@ -31,11 +31,15 @@ class ResponseGenerator<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): ResponseGenerator<T> {
-            checkNotNull(config.errorPayloadGeneratorFactoryBlock) { "Payload generator factory block not set" }
-            checkNotNull(config.responseStatusProviderFactoryBlock) { "Status provider factory block not set" }
+            val errorPayloadGeneratorFactoryBlock =
+                config.errorPayloadGeneratorFactoryBlock
+                    ?: throw IllegalArgumentException("Payload generator factory block not set")
+            val responseStatusProviderFactoryBlock =
+                config.responseStatusProviderFactoryBlock
+                    ?: throw IllegalArgumentException("Status provider factory block not set")
             return ResponseGenerator(
-                (config.errorPayloadGeneratorFactoryBlock!!)(ErrorPayloadGenerator.Builders()),
-                (config.responseStatusProviderFactoryBlock!!)(ResponseStatusProviders)
+                errorPayloadGeneratorFactoryBlock(ErrorPayloadGenerator.Builders()),
+                responseStatusProviderFactoryBlock(ResponseStatusProviders)
             )
         }
 

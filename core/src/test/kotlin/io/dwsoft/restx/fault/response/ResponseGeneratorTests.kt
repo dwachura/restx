@@ -53,7 +53,7 @@ class ResponseGeneratorTests : FunSpec({
 
 class ResponseGeneratorBuilderTests : FunSpec({
     test("configuration without payload generator factory throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             ResponseGenerator.buildFrom(
                 Config<Any>().apply {
                     status { dummy() }
@@ -63,7 +63,7 @@ class ResponseGeneratorBuilderTests : FunSpec({
     }
 
     test("configuration without status provider factory throws exception") {
-        shouldThrow<IllegalStateException> {
+        shouldThrow<IllegalArgumentException> {
             ResponseGenerator.buildFrom(
                 Config<Any>().apply {
                     payload { dummy() }

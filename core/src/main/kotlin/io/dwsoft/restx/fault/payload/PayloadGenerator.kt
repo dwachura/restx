@@ -60,11 +60,15 @@ class SingleErrorPayloadGenerator<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
-            checkNotNull(config.causeResolverFactoryBlock) { "Cause resolver factory block not set" }
-            checkNotNull(config.causeProcessorFactoryBlock) { "Cause processor factory block not set" }
+            val causeResolverFactoryBlock =
+                config.causeResolverFactoryBlock
+                    ?: throw IllegalArgumentException("Cause resolver factory block not set")
+            val causeProcessorFactoryBlock =
+                config.causeProcessorFactoryBlock
+                    ?: throw IllegalArgumentException("Cause processor factory block not set")
             return SingleErrorPayloadGenerator(
-                (config.causeResolverFactoryBlock!!)(CauseResolvers),
-                (config.causeProcessorFactoryBlock!!)(CauseProcessors)
+                causeResolverFactoryBlock(CauseResolvers),
+                causeProcessorFactoryBlock(CauseProcessors)
             )
         }
 
@@ -115,9 +119,13 @@ class MultiErrorPayloadGenerator<T : Any, R : Any>(
 
     companion object Builder {
         fun <T : Any, R : Any> buildFrom(config: Config<T, R>): MultiErrorPayloadGenerator<T, R> {
-            checkNotNull(config.subErrorExtractor) { "Sub-error extractor must be provided" }
-            checkNotNull(config.subErrorPayloadGenerator) { "Sub-error payload generator must be provided" }
-            return MultiErrorPayloadGenerator(config.subErrorExtractor!!, config.subErrorPayloadGenerator!!)
+            val subErrorExtractor =
+                config.subErrorExtractor
+                    ?: throw IllegalArgumentException("Sub-error extractor must be provided")
+            val subErrorPayloadGenerator =
+                config.subErrorPayloadGenerator
+                    ?: throw IllegalArgumentException("Sub-error payload generator must be provided")
+            return MultiErrorPayloadGenerator(subErrorExtractor, subErrorPayloadGenerator)
         }
 
         class Config<T : Any, R : Any> {

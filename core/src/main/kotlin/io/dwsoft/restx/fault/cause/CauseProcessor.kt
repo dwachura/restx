@@ -103,10 +103,12 @@ class OperationErrorProcessor<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): OperationErrorProcessor<T> {
-            checkNotNull(config.causeMessageProviderFactoryBlock) { "Message provider factory block not set" }
+            val causeMessageProviderFactoryBlock =
+                config.causeMessageProviderFactoryBlock
+                    ?: throw IllegalArgumentException("Message provider factory block not set")
             return OperationErrorProcessor(
                 config.causeCodeProviderFactoryBlock(CauseCodeProviders),
-                (config.causeMessageProviderFactoryBlock!!)(CauseMessageProviders)
+                causeMessageProviderFactoryBlock(CauseMessageProviders)
             )
         }
 
@@ -143,14 +145,16 @@ class RequestDataErrorProcessor<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): RequestDataErrorProcessor<T> {
-            checkNotNull(config.causeMessageProviderFactoryBlock) { "Message provider factory block not set" }
-            checkNotNull(config.dataErrorSourceResolverFactoryBlock) {
-                "Data error source provider factory block not set"
-            }
+            val causeMessageProviderFactoryBlock =
+                config.causeMessageProviderFactoryBlock
+                    ?: throw IllegalArgumentException("Message provider factory block not set")
+            val dataErrorSourceResolverFactoryBlock =
+                config.dataErrorSourceResolverFactoryBlock
+                    ?: throw IllegalArgumentException("Data error source provider factory block not set")
             return RequestDataErrorProcessor(
                 config.causeCodeProviderFactoryBlock(CauseCodeProviders),
-                (config.causeMessageProviderFactoryBlock!!)(CauseMessageProviders),
-                (config.dataErrorSourceResolverFactoryBlock!!)(DataErrorSourceResolvers)
+                causeMessageProviderFactoryBlock(CauseMessageProviders),
+                dataErrorSourceResolverFactoryBlock(DataErrorSourceResolvers)
             )
         }
 
