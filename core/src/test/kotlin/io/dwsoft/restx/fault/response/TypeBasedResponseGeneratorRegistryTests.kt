@@ -1,6 +1,6 @@
 package io.dwsoft.restx.fault.response
 
-import io.dwsoft.restx.fault.dummy
+import io.dwsoft.restx.dummy
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull

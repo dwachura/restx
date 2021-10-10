@@ -7,8 +7,8 @@ import io.dwsoft.restx.fault.cause.CauseResolver
 import io.dwsoft.restx.fault.cause.CauseResolvers
 import io.dwsoft.restx.fault.cause.causeId
 import io.dwsoft.restx.fault.cause.invoke
-import io.dwsoft.restx.fault.dummy
-import io.dwsoft.restx.fault.mock
+import io.dwsoft.restx.dummy
+import io.dwsoft.restx.mock
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

@@ -5,8 +5,8 @@ import io.dwsoft.restx.fault.cause.code.CauseCodeProvider
 import io.dwsoft.restx.fault.cause.code.CauseCodeProviders
 import io.dwsoft.restx.fault.cause.message.CauseMessageProvider
 import io.dwsoft.restx.fault.cause.message.CauseMessageProviders
-import io.dwsoft.restx.fault.dummy
-import io.dwsoft.restx.fault.mock
+import io.dwsoft.restx.dummy
+import io.dwsoft.restx.mock
 import io.dwsoft.restx.fault.payload.OperationError
 import io.dwsoft.restx.fault.payload.RequestDataError
 import io.dwsoft.restx.fault.payload.Source

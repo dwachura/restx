@@ -1,7 +1,7 @@
 package io.dwsoft.restx.fault.response
 
-import io.dwsoft.restx.fault.dummy
-import io.dwsoft.restx.fault.mock
+import io.dwsoft.restx.dummy
+import io.dwsoft.restx.mock
 import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.fault.payload.ErrorResponsePayload
 import io.dwsoft.restx.fault.response.SimpleResponseGenerator.Builder.Config

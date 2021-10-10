@@ -2,7 +2,6 @@ package io.dwsoft.restx
 
 import io.dwsoft.restx.fault.cause.code
 import io.dwsoft.restx.fault.cause.message
-import io.dwsoft.restx.fault.dummy
 import io.dwsoft.restx.fault.payload.MultiErrorPayload
 import io.dwsoft.restx.fault.payload.OperationError
 import io.dwsoft.restx.fault.payload.RequestDataError
