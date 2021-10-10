@@ -2,7 +2,7 @@ package io.dwsoft.restx.fault.cause.code
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.fault.cause.Cause
-import io.dwsoft.restx.initLog
+import io.dwsoft.restx.Logging.initLog
 
 /**
  * Interface for cause code providers.

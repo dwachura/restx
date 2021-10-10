@@ -7,7 +7,7 @@ import io.dwsoft.restx.fault.cause.CauseProcessor
 import io.dwsoft.restx.fault.cause.CauseProcessors
 import io.dwsoft.restx.fault.cause.CauseResolver
 import io.dwsoft.restx.fault.cause.CauseResolvers
-import io.dwsoft.restx.initLog
+import io.dwsoft.restx.Logging.initLog
 
 /**
  * Base interface for generators of error response payloads.

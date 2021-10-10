@@ -1,15 +1,14 @@
 package io.dwsoft.restx.fault.response
 
+import io.dwsoft.restx.Collections.syncedMap
 import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.RestX
-import io.dwsoft.restx.RestXConfigurationFailure
 import io.dwsoft.restx.RestXException
-import io.dwsoft.restx.initLog
+import io.dwsoft.restx.Logging.initLog
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import java.util.Collections
 import kotlin.reflect.KClass
 
 /**
@@ -87,8 +86,7 @@ class TypeBasedResponseGeneratorRegistry(
     private val faultTypeToGenerator: Map<KClass<*>, ResponseGenerator<*>>
 ) : ResponseGeneratorRegistry {
     private val log = initLog()
-    // TODO: cleanup - move to commons
-    private val cache = Collections.synchronizedMap(mutableMapOf<KClass<*>, Deferred<ResponseGenerator<*>?>>())
+    private val cache = syncedMap<KClass<*>, Deferred<ResponseGenerator<*>?>>()
 
     override fun <T : Any> searchFor(fault: T): ResponseGenerator<T>? {
         return runBlocking {

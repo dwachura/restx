@@ -11,7 +11,7 @@ import io.dwsoft.restx.fault.payload.OperationError
 import io.dwsoft.restx.fault.payload.RequestDataError
 import io.dwsoft.restx.fault.payload.SingleErrorPayload
 import io.dwsoft.restx.fault.payload.Source
-import io.dwsoft.restx.initLog
+import io.dwsoft.restx.Logging.initLog
 
 /**
  * Interface for processors of [Cause] that convert them into [SingleErrorPayload] objects.

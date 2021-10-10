@@ -3,7 +3,7 @@ package io.dwsoft.restx.fault.response
 import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.fault.payload.ErrorPayloadGenerator
-import io.dwsoft.restx.initLog
+import io.dwsoft.restx.Logging.initLog
 
 /**
  * Interface of the library's main component serving as an entry point to handle fault results of given type. That is,
