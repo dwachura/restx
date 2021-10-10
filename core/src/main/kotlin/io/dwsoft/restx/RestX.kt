@@ -1,8 +1,8 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.fault.response.CompositeResponseGenerator
-import io.dwsoft.restx.fault.response.ResponseGenerator
-import io.dwsoft.restx.fault.response.SimpleResponseGenerator
+import io.dwsoft.restx.core.response.CompositeResponseGenerator
+import io.dwsoft.restx.core.response.ResponseGenerator
+import io.dwsoft.restx.core.response.SimpleResponseGenerator
 import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
