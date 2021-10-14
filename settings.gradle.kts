@@ -1,14 +1,8 @@
 rootProject.name = "restx"
 
-include("core")
-
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-
-    plugins {
-        kotlin("jvm") version "1.5.21" apply false
-    }
+gradle.rootProject {
+    group = "io.dwsoft"
+    version = "0.1.0-SNAPSHOT"
 }
+
+include("restx-core")
