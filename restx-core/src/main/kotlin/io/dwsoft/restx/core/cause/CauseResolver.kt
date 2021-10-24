@@ -1,7 +1,9 @@
 package io.dwsoft.restx.core.cause
 
 import io.dwsoft.restx.RestXException
+import io.dwsoft.restx.core.Logging.initLog
 import kotlin.reflect.KClass
+import kotlin.reflect.full.superclasses
 
 /**
  * Interface of cause resolvers - services used to retrieve information about reasons of failure from passed
@@ -9,12 +11,14 @@ import kotlin.reflect.KClass
  *
  * @param T type of fault objects that resolvers of this class supports
  *
- * @throws RestXException in case of errors during resolving
+ * @throws CauseResolvingFailure in case of errors during resolving
  */
 fun interface CauseResolver<T : Any> {
     fun causeOf(fault: T): Cause<T>
 }
 operator fun <T : Any> CauseResolver<T>.invoke(fault: T) = causeOf(fault)
+
+class CauseResolvingFailure(message: String) : RestXException(message)
 
 /**
  * Factories of [CauseResolver]s.
@@ -33,21 +37,26 @@ object CauseResolvers {
     fun <T : Any> fixedId(id: String): CauseResolver<T> = function { id }
 
     /**
-     * Factory method for [CauseResolver]s that provide causes identified by given fault result type
-     * (as type's [qualified/canonical][Class.getCanonicalName] name of the passed fault result).
-     * In case runtime type cannot be resolved (e.g. anonymous object passed or local class instance) type
-     * is determined from passed class.
+     * Factory method for [CauseResolver]s that provide causes identified by fault's [runtime type name]
+     * [KClass.qualifiedName].
      *
-     * @param defaultType type that should be used when fault result object's runtime type cannot be retrieved
-     * @param T type of fault result objects supported by returned resolver
+     * In case of type cannot be resolved (e.g. anonymous or local class instance passed) fault's type hierarchy
+     * is looked-up.
      */
-    fun <T : Any> type(defaultType: KClass<T>): CauseResolver<T> {
-        val defaultClassName = defaultType.qualifiedName
-            ?: throw IllegalArgumentException(
-                "Default type [${defaultType.java.name}] doesn't have resolvable canonical name"
-            )
-        return CauseResolver { fault -> Cause(fault::class.qualifiedName ?: defaultClassName, fault) }
-    }
+    fun <T : Any> type(): CauseResolver<T> =
+        object : CauseResolver<T> {
+            private val log = CauseResolver::class.initLog()
 
-    inline fun <reified T : Any> type(): CauseResolver<T> = type(T::class)
+            override fun causeOf(fault: T): Cause<T> {
+                val typeName = listOf(fault::class).findTypeName()
+                    .also { log.debug { "Type name found: $it" } }
+                return Cause(typeName, fault)
+            }
+
+            private fun List<KClass<*>>.findTypeName(): String =
+                also { log.debug { "Searching type name for classes: $it" } }
+                    .mapNotNull { it.qualifiedName }.firstOrNull()
+                    ?: also { log.debug { "Resolvable type name not found - parent types will be searched" } }
+                        .flatMap { it.superclasses }.findTypeName()
+        }
 }

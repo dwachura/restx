@@ -10,6 +10,7 @@ import io.dwsoft.restx.core.mock
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
 import io.dwsoft.restx.core.payload.Source
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -147,15 +148,14 @@ abstract class StandardCauseProcessorBuilderTestsBase(
         verify { factoryBlock(CauseMessageProviders) }
     }
 
-    test("by default standard processor is configured with code provider based on fault id") {
-        val expectedId = "expected-id"
-        val processor = buildProcessor(
-            createConfig(null) { dummy() }
-        )
+    test("by default standard processor is configured with code provider based on fault cause id") {
+        val defaultCodeProvider = createConfig(null) { dummy() }.causeCodeProviderFactoryBlock(CauseCodeProviders)
+        val assertCodeProvidedEqualTo: (String) -> Unit = { defaultCodeProvider.codeFor(causeId(it)) shouldBe it }
 
-        val result = processor.process(causeId(expectedId))
-
-        result.code shouldBe expectedId
+        assertSoftly {
+            assertCodeProvidedEqualTo("expected-id")
+            assertCodeProvidedEqualTo("expected-id-2")
+        }
     }
 
     this.apply(additionalTestsInitBlock)
