@@ -1,9 +1,9 @@
 package io.dwsoft.restx
 
+import io.dwsoft.restx.core.Reflection
 import io.dwsoft.restx.core.response.CompositeResponseGenerator
 import io.dwsoft.restx.core.response.ResponseGenerator
 import io.dwsoft.restx.core.response.SimpleResponseGenerator
-import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
 /**
@@ -84,6 +84,4 @@ fun interface Factory<T, R> {
 fun <T, R> Factory<T, R>.madeBy(): FactoryBlock<T, R> = { this@madeBy(this) }
 fun <T, R> Factory<T, R>.make(): FactoryBlock<T, R> = madeBy()
 
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> type(javaClass: Class<T>): KClass<T> = Reflection.getOrCreateKotlinClass(javaClass) as KClass<T>
-fun <T : Any> of(javaClass: Class<T>): KClass<T> = type(javaClass)
+fun <T : Any> Class<T>.kotlinClass(): KClass<T> = Reflection.type(this)

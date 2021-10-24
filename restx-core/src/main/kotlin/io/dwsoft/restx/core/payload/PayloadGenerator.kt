@@ -3,11 +3,11 @@ package io.dwsoft.restx.core.payload
 import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.RestXException
+import io.dwsoft.restx.core.Logging.initLog
 import io.dwsoft.restx.core.cause.CauseProcessor
 import io.dwsoft.restx.core.cause.CauseProcessors
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.CauseResolvers
-import io.dwsoft.restx.core.Logging.initLog
 
 /**
  * Base interface for generators of error response payloads.
@@ -60,20 +60,23 @@ class SingleErrorPayloadGenerator<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
-            val causeResolverFactoryBlock =
-                config.causeResolverFactoryBlock
-                    ?: throw IllegalArgumentException("Cause resolver factory block not set")
             val causeProcessorFactoryBlock =
                 config.causeProcessorFactoryBlock
                     ?: throw IllegalArgumentException("Cause processor factory block not set")
             return SingleErrorPayloadGenerator(
-                causeResolverFactoryBlock(CauseResolvers),
+                config.causeResolverFactoryBlock(CauseResolvers),
                 causeProcessorFactoryBlock(CauseProcessors)
             )
         }
 
+        /**
+         * Configuration for [SingleErrorPayloadGenerator]'s [Builder].
+         *
+         * If not explicitly [configured][identifiedBy], passed faults are [identified by their runtime type name]
+         * [CauseResolvers.type].
+         */
         class Config<T : Any> {
-            var causeResolverFactoryBlock: (CauseResolverFactoryBlock<T>)? = null
+            var causeResolverFactoryBlock: (CauseResolverFactoryBlock<T>) = { type() }
                 private set
             var causeProcessorFactoryBlock: (CauseProcessorFactoryBlock<T>)? = null
                 private set

@@ -49,13 +49,13 @@ private fun <T : Any> createStandardPayloadCodeAndMessageProvider(
 }
 
 /**
- * Standard implementation of configuration for [CauseProcessor]'s [Builder]'s.
+ * Standard implementation of configuration for [CauseProcessor]'s builders.
  *
  * If not explicitly [configured][code], objects produced by such processor have their
  * code equal to [id of the fault object][Cause.id] for which are generated.
  */
 sealed class StandardConfig<T : Any> {
-    var causeCodeProviderFactoryBlock: CauseCodeProviderFactoryBlock<T> = { generatedAs { id } }
+    var causeCodeProviderFactoryBlock: CauseCodeProviderFactoryBlock<T> = { sameAsCauseId() }
         private set
     var causeMessageProviderFactoryBlock: (CauseMessageProviderFactoryBlock<T>)? = null
         private set

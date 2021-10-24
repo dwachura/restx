@@ -9,6 +9,7 @@ import io.dwsoft.restx.core.cause.causeId
 import io.dwsoft.restx.core.cause.invoke
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -48,16 +49,6 @@ class SingleErrorPayloadGeneratorTests : FunSpec({
 })
 
 class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
-    test("configuration without cause resolver factory throws exception") {
-        shouldThrow<IllegalArgumentException> {
-            SingleErrorPayloadGenerator.buildFrom(
-                SingleErrorPayloadGeneratorConfig<Any>().apply {
-                    processedAs { dummy() }
-                }
-            )
-        }.message shouldContain "Cause resolver factory block not set"
-    }
-
     test("configuration without cause processor factory throws exception") {
         shouldThrow<IllegalArgumentException> {
             SingleErrorPayloadGenerator.buildFrom(
@@ -80,6 +71,15 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
         SingleErrorPayloadGenerator.buildFrom(config)
 
         verify { factoryBlock(CauseResolvers) }
+    }
+
+    test("by default generator is configured with cause resolver identifying fault by its type") {
+        val defaultCauseResolver = SingleErrorPayloadGeneratorConfig<Any>().causeResolverFactoryBlock(CauseResolvers)
+
+        assertSoftly {
+            defaultCauseResolver.causeOf(RuntimeException()).id shouldBe RuntimeException::class.qualifiedName
+            defaultCauseResolver.causeOf("abcd").id shouldBe String::class.qualifiedName
+        }
     }
 
     test("configured cause processor factory is called") {

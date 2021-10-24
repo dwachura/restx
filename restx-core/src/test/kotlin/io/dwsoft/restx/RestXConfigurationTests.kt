@@ -1,8 +1,8 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.cause.code
 import io.dwsoft.restx.core.cause.message
+import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.payload.MultiErrorPayload
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
@@ -20,14 +20,9 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with code the same as object type is created") {
         val generator = RestX.respondTo<Any> {
             payload {
-                error {
-                    identifiedBy { type() }
-                    processedAs { operationError {
-                        code { sameAsCauseId() }
-                        message { dummy() }
-                    } }
-                }
-            }
+                error { processedAs { operationError {
+                    message { dummy() } }
+                } } }
             status { dummy() }
         }
 
@@ -40,13 +35,10 @@ class RestXConfigurationTests : FunSpec({
         val expectedCode = "code"
         val generator = RestX.respondTo<Any> {
             payload {
-                error {
-                    identifiedBy { type() }
-                    processedAs { operationError {
-                        code(expectedCode)
-                        message { dummy() }
-                    } }
-                }
+                error { processedAs { operationError {
+                    code(expectedCode)
+                    message { dummy() }
+                } } }
             }
             status { dummy() }
         }
@@ -60,13 +52,10 @@ class RestXConfigurationTests : FunSpec({
         val expectedCode = "code"
         val generator = RestX.respondTo<Any> {
             payload {
-                error {
-                    withId("dummy")
-                    processedAs { operationError {
-                        code { generatedAs { expectedCode } }
-                        message { dummy() }
-                    } }
-                }
+                error { processedAs { operationError {
+                    code { generatedAs { expectedCode } }
+                    message { dummy() }
+                } } }
             }
             status { dummy() }
         }
@@ -101,12 +90,9 @@ class RestXConfigurationTests : FunSpec({
         val expectedMessage = "message"
         val generator = RestX.respondTo<Any> {
             payload {
-                error {
-                    identifiedBy { type() }
-                    processedAs { operationError {
-                        message(expectedMessage)
-                    } }
-                }
+                error { processedAs { operationError {
+                    message(expectedMessage)
+                } } }
             }
             status { dummy() }
         }
@@ -120,12 +106,9 @@ class RestXConfigurationTests : FunSpec({
         val faultResult = RuntimeException("message")
         val generator = RestX.respondTo<Exception> {
             payload {
-                error {
-                    identifiedBy { type() }
-                    processedAs { operationError {
-                        message { generatedAs { context.message!! } }
-                    } }
-                }
+                error { processedAs { operationError {
+                    message { generatedAs { context.message!! } }
+                } } }
             }
             status { dummy() }
         }
@@ -161,12 +144,9 @@ class RestXConfigurationTests : FunSpec({
         val status = 500
         val generator = RestX.respondTo<Any> {
             payload {
-                error {
-                    identifiedBy { type() }
-                    processedAs { operationError {
-                        message { dummy() }
-                    } }
-                }
+                error { processedAs { operationError {
+                    message { dummy() }
+                } } }
             }
             status(status)
         }
@@ -182,17 +162,12 @@ class RestXConfigurationTests : FunSpec({
         val expectedMessage = "Invalid value in query param"
         val generator = RestX.respondTo<InvalidInput> {
             payload {
-                error {
-                    identifiedBy { fixedId(InvalidInput::class.simpleName!!) }
-                    processedAs {
-                        requestDataError {
-                            message { generatedAs { context.message } }
-                            invalidValue { resolvedBy { cause ->
-                                cause.context.let { it.type.toSource(it.location) }
-                            } }
-                        }
-                    }
-                }
+                error { processedAs { requestDataError {
+                    message { generatedAs { context.message } }
+                    invalidValue { resolvedBy { cause ->
+                        cause.context.let { it.type.toSource(it.location) }
+                    } }
+                } } }
             }
             status(400)
         }
@@ -215,14 +190,9 @@ class RestXConfigurationTests : FunSpec({
         val generator = RestX.respondTo<MultiExceptionFaultResult> {
             payload { subErrors<Exception> {
                 extractedAs { it.errors.asList() }
-                whichAre {
-                    identifiedBy { type() }
-                    processedAs {
-                        operationError {
-                            message { generatedAs { context.message!! } }
-                        }
-                    }
-                }
+                whichAre { processedAs { operationError {
+                    message { generatedAs { context.message!! } }
+                } } }
             } }
             status(500)
         }
