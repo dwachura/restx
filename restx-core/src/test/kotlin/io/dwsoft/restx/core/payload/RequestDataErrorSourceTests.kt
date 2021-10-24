@@ -2,7 +2,6 @@ package io.dwsoft.restx.core.payload
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContain
 
 class RequestDataErrorSourceTests : FreeSpec({

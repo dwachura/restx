@@ -3,6 +3,7 @@ package io.dwsoft.restx.core
 import mu.KLogger
 import mu.KotlinLogging
 import java.util.Collections
+import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
 internal object Logging {
@@ -18,15 +19,16 @@ internal object Logging {
             ?: T::class.initLog()
 
 
-    private fun String?.toLogger(): KLogger {
-        require(this != null) { "logger id must not be null" }
+    private fun String.toLogger(): KLogger {
         return KotlinLogging.logger(this)
     }
 
     /**
      * Overloaded version of [initLog] for object of type [KClass].
      */
-    inline fun <reified T : KClass<*>> T.initLog(): KLogger = this.qualifiedName.toLogger()
+    inline fun <reified T : KClass<*>> T.initLog(): KLogger =
+        this.qualifiedName?.toLogger()
+            ?: throw IllegalArgumentException("logger id must not be null")
 
 }
 
@@ -35,4 +37,10 @@ internal object Collections {
      * Constructs [empty, synchronized map][Collections.synchronizedMap].
      */
     fun <K, V> syncedMap(): MutableMap<K, V> = Collections.synchronizedMap(mutableMapOf())
+}
+
+internal object Reflection {
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> type(javaClass: Class<T>): KClass<T> = Reflection.getOrCreateKotlinClass(javaClass) as KClass<T>
+    fun <T : Any> of(javaClass: Class<T>): KClass<T> = type(javaClass)
 }

@@ -28,24 +28,13 @@ class CauseResolverFactoriesTests : FunSpec({
         }
     }
 
-    test("resolver's type parameter is used when type cannot retrieved from fault object") {
-        val resolver = CauseResolvers.type<TestFaultClass>()
+    test("first parent type found is used when type cannot retrieved from fault object") {
+        open class LocalTypeWithRuntimeUnresolvableName : RuntimeException()
+        val resolver = CauseResolvers.type<Exception>()
 
-        val causeId = resolver(object : TestFaultClass() {})
+        val causeId = resolver.causeOf(object : LocalTypeWithRuntimeUnresolvableName() {}).id
 
-        causeId.id shouldBe TestFaultClass.classQualifiedName()
-    }
-
-    test("creation of resolver with unresolvable default type throws exception") {
-        class LocalTypeWithRuntimeUnresolvableName
-
-        shouldThrow<IllegalArgumentException> {
-            CauseResolvers.type<LocalTypeWithRuntimeUnresolvableName>()
-        }.apply {
-            message shouldContain Regex("Default type \\[.*] doesn't have resolvable canonical name")
-            message shouldContain LocalTypeWithRuntimeUnresolvableName::class.java.name
-        }
-
+        causeId shouldBe RuntimeException::class.qualifiedName
     }
 
     test("cause with id supplied by function is created") {
