@@ -40,10 +40,6 @@ sealed interface ErrorPayloadGenerator<in T : Any, out R : ErrorResponsePayload>
             MultiErrorPayloadGenerator.buildFrom(
                 MultiErrorPayloadGenerator.Builder.Config<T, R>().apply(initBlock)
             )
-
-        fun basic(
-            generatorFactory: PayloadGenerators.() -> ErrorPayloadGenerator<T, *>
-        ): ErrorPayloadGenerator<T, *> = generatorFactory(PayloadGenerators)
     }
 }
 
@@ -168,9 +164,3 @@ class NoSubErrorsExtracted : RestXException()
 
 typealias CauseResolverFactoryBlock<T> = FactoryBlock<CauseResolvers, CauseResolver<T>>
 typealias CauseProcessorFactoryBlock<T> = FactoryBlock<CauseProcessors, CauseProcessor<T>>
-
-/**
- * Factories of common implementation of [ErrorPayloadGenerator]s.
- * Additional factory methods should be added as an extension functions.
- */
-object PayloadGenerators

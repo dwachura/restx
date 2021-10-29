@@ -1,9 +1,0 @@
-= RESTX (REST eXceptions)
-
-image::https://github.com/dwachura/restx/actions/workflows/master-ci.yml/badge.svg?branch=master[master,link=https://github.com/dwachura/restx/actions/workflows/master-ci.yml]
-
-== Overview
-
-Error handling framework for REST (-ful or not so much) services.
-
-The goal of this project is to provide an intuitive, structurized and informing error model for REST services.
