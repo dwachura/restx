@@ -4,7 +4,7 @@
 
 # What is RESTX?
 
-RESTX is a library designed to support developers of HTTP-based kotlin/Java services by removing the burden of reinventing the wheel
+RESTX is a library designed to support developers of HTTP-based Kotlin/Java services by removing the burden of reinventing the wheel
 in the area of generating structured and informing error response model (hopefully, in a simple, intuitive manner).
 
 ## Desing overview
