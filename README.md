@@ -12,8 +12,8 @@ in the area of generating structured and informing error response model (hopeful
 ![general flow diagram]  
 _Fault handling process flow_
 
-RESTX's design is based on a concept of **fault** - an object that holds an information on the error happened. Despite the library's name, 
-faults can be of any type, but probably in most cases any kind (subtype) of an exception type will be used.   
+RESTX's design is based on a concept of **fault** - an object that holds information about an error happened during processing request. Despite
+the library's name, faults can be of any type, but probably in most cases any kind (subtype) of an exception type will be used.
 
 Faults are processed by **response generators** - components that generate **responses** using information from fault objects passed to them
 according to the user-defined configuration.
@@ -32,14 +32,14 @@ The above payload types represent the family of _single-error payloads_ (they ho
 a possibility that the service processes may end with a failures caused by multiple errors (e.g. in case of input validation it may be 
 reasonable to report all errors at once, instead of returning response containing only the first one found).  
 For such purposes, RESTX provides so-called _multi-error payloads_. Those are, simply speaking, composites of a single-error payloads, 
-described by a single property named _errors_, in which a collection of "component" payloads is kept. 
+described by a single property named _errors_, in which a collection of "component" payloads is kept.
 
 As it was earlier spoken, in RESTX objects of any type can be treated as faults. There might be cases in which faults of the same type 
 represent different service errors and thus should be converted into payloads with different code and message (basing, for example, on one of 
 the fault's property).  
 To support such cases, payload generators use (fault) **causes** in their work. Causes can be understood as simple wrappers that let to 
 identify concrete "reasons of fault". They are created during payload generation process by **cause resolvers** and to be further used by 
-**cause processors** which are responsible for actual generation of response payloads. 
+**cause processors** which are responsible for actual generation of response payloads.
 
 ## Usage examples
 
