@@ -11,10 +11,10 @@ import io.kotest.matchers.string.shouldContain
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
-class FixedCauseCodeProviderTests : FunSpec({
+class FixedCodeResolverTests : FunSpec({
     test("defined code is always returned") {
         val expectedCode = "CONST_CODE"
-        val sut = FixedCauseCodeProvider(expectedCode)
+        val sut = FixedCodeResolver(expectedCode)
 
         assertSoftly {
             sut.codeFor(Any().causeId("id1")) shouldBe expectedCode
@@ -24,10 +24,10 @@ class FixedCauseCodeProviderTests : FunSpec({
     }
 })
 
-class MapBasedCauseCodeProviderTests : FunSpec({
-    test("code provider cannot be created without mappings") {
+class MapBasedCodeResolverTests : FunSpec({
+    test("code resolver cannot be created without mappings") {
         shouldThrow<IllegalArgumentException> {
-            MapBasedCauseCodeProvider(emptyMap())
+            MapBasedCodeResolver(emptyMap())
         }.message shouldContain "Fault code mappings not provided"
     }
 
@@ -35,7 +35,7 @@ class MapBasedCauseCodeProviderTests : FunSpec({
         val faultId = "fault-id"
         val expectedCode = "expected-code"
 
-        val code = MapBasedCauseCodeProvider(mapOf(faultId to expectedCode))
+        val code = MapBasedCodeResolver(mapOf(faultId to expectedCode))
             .codeFor(Any().causeId(faultId))
 
         code shouldBe expectedCode
@@ -44,17 +44,17 @@ class MapBasedCauseCodeProviderTests : FunSpec({
     test("exception is thrown when code is not defined for given fault id") {
         val unmappedId = "unmapped-id"
 
-        shouldThrow<CauseCodeProvisioningFailure> {
-            MapBasedCauseCodeProvider(mapOf("fault-id" to "code"))
+        shouldThrow<CodeResolvingFailure> {
+            MapBasedCodeResolver(mapOf("fault-id" to "code"))
                 .codeFor(Any().causeId(unmappedId))
         }.message should containInOrder("None code mapping found for id", unmappedId)
     }
 })
 
-class GeneratedCauseCodeProviderTests : FunSpec({
+class GeneratedCodeResolverTests : FunSpec({
     test("code defined by passed function is returned") {
         val suffix = Random.nextUInt()
-        val sut = CauseCodeProviders.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
+        val sut = CodeResolvers.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
 
         assertSoftly {
             sut.codeFor(Any().causeId("id1")) shouldBe "${Any::class.simpleName}_$suffix"
@@ -65,7 +65,7 @@ class GeneratedCauseCodeProviderTests : FunSpec({
 
     test("code same as cause id is returned") {
         val expectedId = "id"
-        val sut = CauseCodeProviders.sameAsCauseId<Any>()
+        val sut = CodeResolvers.sameAsCauseId<Any>()
 
         sut.codeFor(Any().causeId(expectedId)) shouldBe expectedId
     }

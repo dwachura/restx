@@ -3,10 +3,10 @@ package io.dwsoft.restx.core.cause
 import io.dwsoft.restx.FactoryBlock
 import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.RestXException
-import io.dwsoft.restx.core.cause.code.CauseCodeProvider
-import io.dwsoft.restx.core.cause.code.CauseCodeProviders
-import io.dwsoft.restx.core.cause.message.CauseMessageProvider
-import io.dwsoft.restx.core.cause.message.CauseMessageProviders
+import io.dwsoft.restx.core.cause.code.CodeResolver
+import io.dwsoft.restx.core.cause.code.CodeResolvers
+import io.dwsoft.restx.core.cause.message.MessageResolver
+import io.dwsoft.restx.core.cause.message.MessageResolvers
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
 import io.dwsoft.restx.core.payload.SingleErrorPayload
@@ -33,14 +33,14 @@ class CauseProcessingFailure(throwable: Throwable) : RestXException(throwable)
  * RestX's standard implementation of payload's [code][SingleErrorPayload.code]
  * and [message][SingleErrorPayload.message] generation.
  */
-private fun <T : Any> createStandardPayloadCodeAndMessageProvider(
-    causeCodeProvider: CauseCodeProvider<T>,
-    causeMessageProvider: CauseMessageProvider<T>
+private fun <T : Any> createStandardCodeAndMessageResolver(
+    codeResolver: CodeResolver<T>,
+    messageResolver: MessageResolver<T>
 ) = { cause: Cause<T> ->
     runCatching {
         Pair(
-            causeCodeProvider.codeFor(cause),
-            causeMessageProvider.messageFor(cause)
+            codeResolver.codeFor(cause),
+            messageResolver.messageFor(cause)
         )
     }.fold(
         onSuccess = { it },
@@ -55,32 +55,32 @@ private fun <T : Any> createStandardPayloadCodeAndMessageProvider(
  * code equal to [id of the fault object][Cause.id] for which are generated.
  */
 sealed class StandardConfig<T : Any> {
-    var causeCodeProviderFactoryBlock: CauseCodeProviderFactoryBlock<T> = { sameAsCauseId() }
+    var codeResolverFactoryBlock: CodeResolverFactoryBlock<T> = { sameAsCauseId() }
         private set
-    var causeMessageProviderFactoryBlock: (CauseMessageProviderFactoryBlock<T>)? = null
+    var messageResolverFactoryBlock: (MessageResolverFactoryBlock<T>)? = null
         private set
 
-    fun code(factoryBlock: CauseCodeProviderFactoryBlock<T>) = this.apply {
-        causeCodeProviderFactoryBlock = factoryBlock
+    fun code(factoryBlock: CodeResolverFactoryBlock<T>) = this.apply {
+        codeResolverFactoryBlock = factoryBlock
     }
 
-    fun message(factoryBlock: CauseMessageProviderFactoryBlock<T>) = this.apply {
-        causeMessageProviderFactoryBlock = factoryBlock
+    fun message(factoryBlock: MessageResolverFactoryBlock<T>) = this.apply {
+        messageResolverFactoryBlock = factoryBlock
     }
 }
 
-typealias CauseCodeProviderFactoryBlock<T> = FactoryBlock<CauseCodeProviders, CauseCodeProvider<T>>
-typealias CauseMessageProviderFactoryBlock<T> = FactoryBlock<CauseMessageProviders, CauseMessageProvider<T>>
+typealias CodeResolverFactoryBlock<T> = FactoryBlock<CodeResolvers, CodeResolver<T>>
+typealias MessageResolverFactoryBlock<T> = FactoryBlock<MessageResolvers, MessageResolver<T>>
 
 /**
  * Extension function serving as a shortcut to configure cause processor builder to create
- * processor with [fixed code provider][CauseCodeProviders.fixed].
+ * processor with [fixed code resolver][CodeResolvers.fixed].
  */
 fun <T : Any> StandardConfig<T>.code(fixed: String) = code { fixed(fixed) }
 
 /**
  * Extension function serving as a shortcut to configure cause processor builder to create
- * processor with [fixed message provider][CauseMessageProviders.fixed].
+ * processor with [fixed message resolver][MessageResolvers.fixed].
  */
 fun <T : Any> StandardConfig<T>.message(fixed: String) = message { fixed(fixed) }
 
@@ -88,12 +88,12 @@ fun <T : Any> StandardConfig<T>.message(fixed: String) = message { fixed(fixed) 
  * Implementation of [CauseProcessor] that generates [payloads of request processing errors][OperationError].
  */
 class OperationErrorProcessor<T : Any>(
-    causeCodeProvider: CauseCodeProvider<T>,
-    causeMessageProvider: CauseMessageProvider<T>
+    codeResolver: CodeResolver<T>,
+    messageResolver: MessageResolver<T>
 ) : CauseProcessor<T> {
     private val log = initLog()
     private val codeAndMessageOf =
-        createStandardPayloadCodeAndMessageProvider(causeCodeProvider, causeMessageProvider)
+        createStandardCodeAndMessageResolver(codeResolver, messageResolver)
 
     override fun process(cause: Cause<T>): OperationError {
         log.info { "Processing cause $cause" }
@@ -103,12 +103,12 @@ class OperationErrorProcessor<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): OperationErrorProcessor<T> {
-            val causeMessageProviderFactoryBlock =
-                config.causeMessageProviderFactoryBlock
-                    ?: throw IllegalArgumentException("Message provider factory block not set")
+            val messageResolverFactoryBlock =
+                config.messageResolverFactoryBlock
+                    ?: throw IllegalArgumentException("Message resolver factory block not set")
             return OperationErrorProcessor(
-                config.causeCodeProviderFactoryBlock(CauseCodeProviders),
-                causeMessageProviderFactoryBlock(CauseMessageProviders)
+                config.codeResolverFactoryBlock(CodeResolvers),
+                messageResolverFactoryBlock(MessageResolvers)
             )
         }
 
@@ -123,13 +123,13 @@ class OperationErrorProcessor<T : Any>(
  * Implementation of [CauseProcessor] that generates [payloads of invalid request data errors][RequestDataError].
  */
 class RequestDataErrorProcessor<T : Any>(
-    causeCodeProvider: CauseCodeProvider<T>,
-    causeMessageProvider: CauseMessageProvider<T>,
+    codeResolver: CodeResolver<T>,
+    messageResolver: MessageResolver<T>,
     private val dataErrorSourceResolver: DataErrorSourceResolver<T>
 ) : CauseProcessor<T> {
     private val log = initLog()
     private val codeAndMessageOf =
-        createStandardPayloadCodeAndMessageProvider(causeCodeProvider, causeMessageProvider)
+        createStandardCodeAndMessageResolver(codeResolver, messageResolver)
 
     override fun process(cause: Cause<T>): RequestDataError {
         log.info { "Processing cause $cause" }
@@ -145,15 +145,15 @@ class RequestDataErrorProcessor<T : Any>(
 
     companion object Builder {
         fun <T : Any> buildFrom(config: Config<T>): RequestDataErrorProcessor<T> {
-            val causeMessageProviderFactoryBlock =
-                config.causeMessageProviderFactoryBlock
-                    ?: throw IllegalArgumentException("Message provider factory block not set")
+            val messageResolverFactoryBlock =
+                config.messageResolverFactoryBlock
+                    ?: throw IllegalArgumentException("Message resolver factory block not set")
             val dataErrorSourceResolverFactoryBlock =
                 config.dataErrorSourceResolverFactoryBlock
-                    ?: throw IllegalArgumentException("Data error source provider factory block not set")
+                    ?: throw IllegalArgumentException("Data error source resolver factory block not set")
             return RequestDataErrorProcessor(
-                config.causeCodeProviderFactoryBlock(CauseCodeProviders),
-                causeMessageProviderFactoryBlock(CauseMessageProviders),
+                config.codeResolverFactoryBlock(CodeResolvers),
+                messageResolverFactoryBlock(MessageResolvers),
                 dataErrorSourceResolverFactoryBlock(DataErrorSourceResolvers)
             )
         }

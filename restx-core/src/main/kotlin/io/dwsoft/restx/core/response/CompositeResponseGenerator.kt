@@ -89,6 +89,7 @@ class TypeBasedResponseGeneratorRegistry(
     private val cache = syncedMap<KClass<*>, Deferred<ResponseGenerator<*>?>>()
 
     override fun <T : Any> searchFor(fault: T): ResponseGenerator<T>? {
+        @Suppress("UNCHECKED_CAST")
         return runBlocking {
             log.info { "Searching generator for $fault" }
             log.debug { "Cache: $cache" }
