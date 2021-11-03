@@ -1,18 +1,37 @@
-import org.gradle.kotlin.dsl.repositories
-
 plugins {
     kotlin("jvm")
+    `maven-publish`
 }
 
-group = "${parent!!.group}.$name"
+group = "${parent!!.group}"
 version = rootProject.version
 
+val artifactName = "${rootProject.name}-${project.name}"
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            artifactId = artifactName
+            from(components["java"])
+        }
+    }
+}
+
 repositories {
-    gradlePluginPortal()
+    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:2.0.11")
-    runtimeOnly("ch.qos.logback:logback-classic:1.2.6")
+    logging()
+    kotest()
+    mockk()
+}
+
+tasks.jar {
+    archiveBaseName.set(artifactName)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

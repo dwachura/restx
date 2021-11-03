@@ -1,8 +1,8 @@
 rootProject.name = "restx"
 
 gradle.rootProject {
-    group = "io.dwsoft"
+    group = "io.dwsoft.$name"
     version = "0.1.0-SNAPSHOT"
 }
 
-include("restx-core")
+include("core")

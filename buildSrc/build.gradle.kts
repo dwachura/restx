@@ -7,6 +7,7 @@ repositories {
     mavenCentral()
 }
 
+val kotlinVersion : String by project
 dependencies {
-    implementation(kotlin("gradle-plugin", "1.5.31"))
+    implementation(kotlin("gradle-plugin", kotlinVersion))
 }

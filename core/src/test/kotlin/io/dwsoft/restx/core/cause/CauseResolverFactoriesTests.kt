@@ -1,10 +1,8 @@
 package io.dwsoft.restx.core.cause
 
 import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 
 class CauseResolverFactoriesTests : FunSpec({
     test("single cause with fixed id is returned") {
