@@ -1,8 +1,8 @@
 package io.dwsoft.restx.core.cause.message
 
 import io.dwsoft.restx.RestXException
-import io.dwsoft.restx.core.cause.Cause
 import io.dwsoft.restx.core.Logging.initLog
+import io.dwsoft.restx.core.cause.Cause
 
 /**
  * Interface of cause message resolvers.
@@ -16,6 +16,43 @@ fun interface MessageResolver<in T : Any> {
      * @throws MessageResolvingFailure in case message for given [id][Cause] cannot be resolved
      */
     fun messageFor(cause: Cause<T>): String
+
+    /**
+     * Factories of [MessageResolver]s.
+     * Additional factory methods should be added as an extension functions.
+     */
+    companion object Factories {
+        /**
+         * Factory method that creates [MessageResolver] based on passed function
+         */
+        fun <T : Any> generatedAs(resolver: Cause<T>.() -> String): MessageResolver<T> =
+            object : MessageResolver<T> {
+                private val log = MessageResolver::class.initLog()
+
+                override fun messageFor(cause: Cause<T>): String =
+                    cause.resolver().also {
+                        log.info { "Returning message from custom resolver for $cause" }
+                        log.debug { "Message: $it" }
+                    }
+            }
+
+        /**
+         * Factory method for [FixedMessageResolver]
+         */
+        fun <T : Any> fixed(message: String): MessageResolver<T> = FixedMessageResolver(message)
+
+        /**
+         * Factory method for [MapBasedMessageResolver]
+         */
+        fun <T : Any> mapBased(mapping: Map<String, String>): MessageResolver<T> =
+            MapBasedMessageResolver(mapping)
+
+        /**
+         * Factory method for [MapBasedMessageResolver]
+         */
+        fun <T : Any> mapBased(vararg mapEntries: Pair<String, String>): MessageResolver<T> =
+            this.mapBased(mapping = mapOf(pairs = mapEntries))
+    }
 }
 
 class MessageResolvingFailure(message: String) : RestXException(message)
@@ -53,41 +90,4 @@ class MapBasedMessageResolver(private val mapping: Map<String, String>) : Messag
             }
             ?: throw MessageResolvingFailure("None message mapping found for id '${cause.id}'")
     }
-}
-
-/**
- * Factories of [MessageResolver]s.
- * Additional factory methods should be added as an extension functions.
- */
-object MessageResolvers {
-    /**
-     * Factory method that creates [MessageResolver] based on passed function
-     */
-    fun <T : Any> generatedAs(resolver: Cause<T>.() -> String): MessageResolver<T> =
-        object : MessageResolver<T> {
-            private val log = MessageResolver::class.initLog()
-
-            override fun messageFor(cause: Cause<T>): String =
-                cause.resolver().also {
-                    log.info { "Returning message from custom resolver for $cause" }
-                    log.debug { "Message: $it" }
-                }
-        }
-
-    /**
-     * Factory method for [FixedMessageResolver]
-     */
-    fun <T : Any> fixed(message: String): MessageResolver<T> = FixedMessageResolver(message)
-
-    /**
-     * Factory method for [MapBasedMessageResolver]
-     */
-    fun <T : Any> mapBased(mapping: Map<String, String>): MessageResolver<T> =
-        MapBasedMessageResolver(mapping)
-
-    /**
-     * Factory method for [MapBasedMessageResolver]
-     */
-    fun <T : Any> mapBased(vararg mapEntries: Pair<String, String>): MessageResolver<T> =
-        this.mapBased(mapping = mapOf(pairs = mapEntries))
 }

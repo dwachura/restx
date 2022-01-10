@@ -15,10 +15,10 @@ object RestX {
      *
      * @throws RestXConfigurationFailure in case of any errors during creation of a generator
      */
-    fun <T : Any> respondTo(initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>) = buildGenerator {
-        SimpleResponseGenerator.Builder.Config<T>()
+    fun <T : Any> respondTo(initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>) = buildGenerator {
+        SimpleResponseGeneratorBuilder.Config<T>()
             .apply(initBlock)
-            .let { SimpleResponseGenerator.buildFrom(it) }
+            .let { SimpleResponseGeneratorBuilder.buildFrom(it) }
     }
 
     private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
@@ -27,7 +27,7 @@ object RestX {
     /**
      * Delegate of [respondTo].
      */
-    fun <T : Any> generator(initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>) = respondTo(initBlock)
+    fun <T : Any> generator(initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>) = respondTo(initBlock)
 
     /**
      * Delegate of [respondTo]. May be more readable in some situations.
@@ -35,7 +35,7 @@ object RestX {
     @Suppress("UNUSED_PARAMETER")
     fun <T : Any> respondToFaultOfType(
         faultObjectsType: KClass<T>,
-        initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>
+        initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>
     ): ResponseGenerator<T> = respondTo(initBlock)
 
     /**
@@ -43,7 +43,7 @@ object RestX {
      */
     fun <T : Any> generator(
         faultObjectsType: KClass<T>,
-        initBlock: InitBlock<SimpleResponseGenerator.Builder.Config<T>>
+        initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>
     ) = respondToFaultOfType(faultObjectsType, initBlock)
 
     /**

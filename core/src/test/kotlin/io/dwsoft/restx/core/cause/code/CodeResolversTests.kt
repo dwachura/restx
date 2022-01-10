@@ -54,7 +54,7 @@ class MapBasedCodeResolverTests : FunSpec({
 class GeneratedCodeResolverTests : FunSpec({
     test("code defined by passed function is returned") {
         val suffix = Random.nextUInt()
-        val sut = CodeResolvers.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
+        val sut = CodeResolver.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
 
         assertSoftly {
             sut.codeFor(Any().causeId("id1")) shouldBe "${Any::class.simpleName}_$suffix"
@@ -65,7 +65,7 @@ class GeneratedCodeResolverTests : FunSpec({
 
     test("code same as cause id is returned") {
         val expectedId = "id"
-        val sut = CodeResolvers.sameAsCauseId<Any>()
+        val sut = CodeResolver.sameAsCauseId<Any>()
 
         sut.codeFor(Any().causeId(expectedId)) shouldBe expectedId
     }

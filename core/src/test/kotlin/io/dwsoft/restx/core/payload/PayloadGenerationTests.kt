@@ -1,23 +1,16 @@
 package io.dwsoft.restx.core.payload
 
-import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.core.cause.CauseProcessor
-import io.dwsoft.restx.core.cause.CauseProcessors
 import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.CauseResolvers
 import io.dwsoft.restx.core.cause.causeId
 import io.dwsoft.restx.core.cause.invoke
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
-import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.verify
-import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator.Builder.Config as MultiErrorPayloadGeneratorConfig
-import io.dwsoft.restx.core.payload.SingleErrorPayloadGenerator.Builder.Config as SingleErrorPayloadGeneratorConfig
 
 class SingleErrorPayloadGeneratorTests : FunSpec({
     test("fault cause info resolver is called") {
@@ -45,55 +38,6 @@ class SingleErrorPayloadGeneratorTests : FunSpec({
         generator.payloadOf(Any())
 
         verify { processor.process(cause) }
-    }
-})
-
-class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
-    test("configuration without cause processor factory throws exception") {
-        shouldThrow<IllegalArgumentException> {
-            SingleErrorPayloadGenerator.buildFrom(
-                SingleErrorPayloadGeneratorConfig<Any>().apply {
-                    identifiedBy { dummy() }
-                }
-            )
-        }.message shouldContain "Cause processor factory block not set"
-    }
-
-    test("configured cause resolver factory is called") {
-        val factoryBlock = mock<AnyCauseResolverFactoryBlock> {
-            every { this@mock(any()) } returns dummy()
-        }
-        val config = SingleErrorPayloadGeneratorConfig<Any>().apply {
-            identifiedBy(factoryBlock)
-            processedAs { dummy() }
-        }
-
-        SingleErrorPayloadGenerator.buildFrom(config)
-
-        verify { factoryBlock(CauseResolvers) }
-    }
-
-    test("by default generator is configured with cause resolver identifying fault by its type") {
-        val defaultCauseResolver = SingleErrorPayloadGeneratorConfig<Any>().causeResolverFactoryBlock(CauseResolvers)
-
-        assertSoftly {
-            defaultCauseResolver.causeOf(RuntimeException()).id shouldBe RuntimeException::class.qualifiedName
-            defaultCauseResolver.causeOf("abcd").id shouldBe String::class.qualifiedName
-        }
-    }
-
-    test("configured cause processor factory is called") {
-        val factoryBlock = mock<AnyCauseProcessorFactoryBlock> {
-            every { this@mock(any()) } returns dummy()
-        }
-        val config = SingleErrorPayloadGeneratorConfig<Any>().apply {
-            identifiedBy { dummy() }
-            processedAs(factoryBlock)
-        }
-
-        SingleErrorPayloadGenerator.buildFrom(config)
-
-        verify { factoryBlock(CauseProcessors) }
     }
 })
 
@@ -147,36 +91,3 @@ class MultiErrorPayloadGeneratorTests : FunSpec({
         result shouldBe MultiErrorPayload(expectedPayloadContent)
     }
 })
-
-class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
-    test("configuration without sub-error extractor throws exception") {
-        shouldThrow<IllegalArgumentException> {
-            MultiErrorPayloadGenerator.buildFrom(
-                MultiErrorPayloadGeneratorConfig<Any, Any>().apply {
-                    handledBy(dummy())
-                }
-            )
-        }.message shouldContain "Sub-error extractor must be provided"
-    }
-
-    test("configuration without sub-error payload generator throws exception") {
-        shouldThrow<IllegalArgumentException> {
-            MultiErrorPayloadGenerator.buildFrom(
-                MultiErrorPayloadGeneratorConfig<Any, Any>().apply {
-                    extractedAs { dummy() }
-                }
-            )
-        }.message shouldContain "Sub-error payload generator must be provided"
-    }
-
-    test("sub-error payload generator init block is called") {
-        val initBlock = mock<InitBlock<SingleErrorPayloadGenerator.Builder.Config<Any>>>()
-
-        runCatching { MultiErrorPayloadGeneratorConfig<Any, Any>().whichAre(initBlock) }
-
-        verify { initBlock(any()) }
-    }
-})
-
-private typealias AnyCauseResolverFactoryBlock = CauseResolverFactoryBlock<Any>
-private typealias AnyCauseProcessorFactoryBlock = CauseProcessorFactoryBlock<Any>

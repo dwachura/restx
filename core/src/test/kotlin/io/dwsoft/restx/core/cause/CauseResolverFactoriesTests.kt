@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 class CauseResolverFactoriesTests : FunSpec({
     test("single cause with fixed id is returned") {
         val expectedId = "fixed-id"
-        val resolver = CauseResolvers.fixedId<Any>(expectedId)
+        val resolver = CauseResolver.fixedId<Any>(expectedId)
 
         assertSoftly {
             resolver(Any()).id shouldBe expectedId
@@ -17,7 +17,7 @@ class CauseResolverFactoriesTests : FunSpec({
     }
 
     test("cause with type based id is created") {
-        val resolver = CauseResolvers.type<Any>()
+        val resolver = CauseResolver.type<Any>()
 
         assertSoftly {
             resolver(Any()).id shouldBe qualifiedNameOf<Any>()
@@ -28,7 +28,7 @@ class CauseResolverFactoriesTests : FunSpec({
 
     test("first parent type found is used when type cannot retrieved from fault object") {
         open class LocalTypeWithRuntimeUnresolvableName : RuntimeException()
-        val resolver = CauseResolvers.type<Exception>()
+        val resolver = CauseResolver.type<Exception>()
 
         val causeId = resolver.causeOf(object : LocalTypeWithRuntimeUnresolvableName() {}).id
 
@@ -37,7 +37,7 @@ class CauseResolverFactoriesTests : FunSpec({
 
     test("cause with id supplied by function is created") {
         val faultId = "fault-id"
-        val resolver = CauseResolvers.function<TestFaultClass> { it.faultId }
+        val resolver = CauseResolver.function<TestFaultClass> { it.faultId }
 
         resolver.causeOf(TestFaultClass(faultId)).id shouldBe faultId
     }

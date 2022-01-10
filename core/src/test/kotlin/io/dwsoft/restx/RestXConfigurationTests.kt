@@ -1,7 +1,5 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.core.cause.code
-import io.dwsoft.restx.core.cause.message
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.payload.MultiErrorPayload
 import io.dwsoft.restx.core.payload.OperationError
@@ -9,7 +7,6 @@ import io.dwsoft.restx.core.payload.RequestDataError
 import io.dwsoft.restx.core.payload.Source
 import io.dwsoft.restx.core.response.HttpStatus
 import io.dwsoft.restx.core.response.ResponseGenerator
-import io.dwsoft.restx.core.response.status
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
