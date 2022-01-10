@@ -46,17 +46,13 @@ identify concrete "reasons of fault". They are created during payload generation
 Here's the example of configuration and usage of the most basic generator that processes faults of Exception type:
 
 ```kotlin
-  val generator = RestX.respondTo<Exception> { 
-    payload { 
-      error { processedAs { 
-        operationError {
-          identifiedBy { type() } // identify faults by its type - could be omitted, as it's a default behavior
-          code { sameAsCauseId() } // generate payloads with code same as fault's identifier - could be omitted, as it's a default behavior
-          message { generatedAs { context.localizedMessage } } // generate payloads with exception message 
-        } 
-      } } 
-    }
-    status(500) // HTTP status of a response
+  val generator = RestX.respondTo<Exception> {
+    representing { operationError {
+      identifiedBy { type() } // identify faults by its type - could be omitted, as it's a default behavior
+      withCode { sameAsCauseId() } // generate payloads with code same as fault's identifier - could be omitted, as it's a default behavior
+      withMessage { generatedAs { context.localizedMessage } } // generate payloads with exception message 
+    } }
+    withStatus(500) // HTTP status of a response
   }
   
   val response = generator.responseOf(RuntimeException("Service failure"))
@@ -67,24 +63,21 @@ Here's the example of configuration and usage of the most basic generator that p
 Generator that responds to input data errors, may be crated like:
 
 ```kotlin
-  class InvalidParamException(val type: Source.Type, val location: String, message: String)
-
+  class InvalidParamException(val type: Source.Type, val location: String, message: String) : RuntimeException(message)
+  
   val generator = RestX.respondTo<InvalidParamException> {
-    payload {
-      error { processedAs { 
-        requestDataError {
-          message { generatedAs { context.message } }
-          invalidValue { resolvedBy { cause ->
-            cause.context.let { it.type.toSource(it.location) }
-          } }
-        } 
+    representing { requestDataError {
+      identifiedBy("INVALID_PARAM")
+      withMessage { generatedAs { context.localizedMessage } }
+      pointingInvalidValue { resolvedBy { cause ->
+        cause.context.let { it.type.toSource(it.location) }
       } }
-    }
-    status(400)
+    } }
+    withStatus(400)
   }
   
   val response = generator.responseOf(InvalidParamException(Source.Type.QUERY, "queryParam1", "Invalid value"))
-  println(response.payload) // RequestDataError(code=io.dwsoft.restx.InvalidParamException, message=Invalid value, source=Source(type=QUERY, location=queryParam1))
+  println(response.payload) // RequestDataError(code=INVALID_PARAM, message=Invalid value, source=Source(type=QUERY, location=queryParam1))
   println(response.status) // HttpStatus(code=400)
 ```
 
@@ -92,22 +85,20 @@ Another, more real-life use case, would involve creation of a generator that ret
 fault's type name:
 
 ```kotlin
-  val generator = RestX.respondTo<Exception> { 
-    payload {
-      error { processedAs { operationError {
-        code { mapBased( // codes will be taken from defined map - key == fault id (type name, as defined above)
-          Exception::class.qualifiedName!! to "GENERIC_FAILURE",
-          RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
-          IOException::class.qualifiedName!! to "IO_FAILURE"
-        ) }
-        message { mapBased( // messages can also be retrieved this way
-          Exception::class.qualifiedName!! to "Mapped message for exception",
-          RuntimeException::class.qualifiedName!! to "Mapped message for runtime exception",
-          IOException::class.qualifiedName!! to "Mapped message for I/O exception"
-        ) }
-      } } }
-    }
-    status(500) // HTTP status of a response
+  val generator = RestX.respondTo<Exception> {
+    representing { operationError {
+      withCode { mapBased( // codes will be taken from defined map - key == fault id (type name, as defined above)
+        Exception::class.qualifiedName!! to "GENERIC_FAILURE",
+        RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
+        IOException::class.qualifiedName!! to "IO_FAILURE"
+      ) }
+      withMessage { mapBased( // messages can also be retrieved this way
+        Exception::class.qualifiedName!! to "Mapped message for exception",
+        RuntimeException::class.qualifiedName!! to "Mapped message for runtime exception",
+        IOException::class.qualifiedName!! to "Mapped message for I/O exception"
+      ) }
+    } }
+    withStatus(500) // HTTP status of a response
   }
 
 var response = generator.responseOf(RuntimeException("Runtime failure"))
@@ -121,13 +112,13 @@ Below generator will return multi-error payloads:
 
 ```kotlin
   val generator = RestX.respondTo<List<Exception>> {
-    payload { subErrors<Exception> {
+    representing { compositeOf<Exception> {
       extractedAs { it }
-      whichAre { processedAs { operationError {
-        message { generatedAs { context.localizedMessage } }
-      } } }
+      eachRepresenting { operationError {
+        withMessage { generatedAs { context.localizedMessage } }
+      } }
     } }
-    status(500)
+    withStatus(500)
   }
   
   val response = generator.responseOf(listOf(
@@ -143,30 +134,24 @@ Generators can also be composed:
 
 ```kotlin
   val predefinedGenerator = RestX.respondTo<IllegalStateException> {
-    payload {
-      error { processedAs { operationError {
-        code { fixed("ILLEGAL_STATE") } // generate payloads with fixed code...
-        message { fixed("Illegal state exception") } // ...and fixed message as well
-      } } }
-    }
-    status(500) // HTTP status of a response
+    representing { operationError {
+      withCode { fixed("ILLEGAL_STATE") } // generate payloads with fixed code...
+      withMessage { fixed("Illegal state exception") } // ...and fixed message as well
+    } }
+    withStatus(500) // HTTP status of a response
   }
   
-  val compositeGenerator = RestX.compose {
-    registeredByFaultType {
-      register { predefinedGenerator } // register pre-defined generator
-      register { // register in-line generator
-        respondTo<IllegalArgumentException> {
-          payload {
-            error { processedAs { operationError {
-              message { fixed("Illegal argument exception") }
-            } } }
-          }
-          status(400)
-        }
+  val compositeGenerator = RestX.compose { registeredByFaultType {
+    register { predefinedGenerator } // register pre-defined generator
+    register { // register in-line generator
+      respondTo<IllegalArgumentException> {
+        representing { operationError {
+          withMessage { fixed("Illegal argument exception") }
+        } }
+        withStatus(400)
       }
     }
-  }
+  } }
   
   var response = compositeGenerator.responseOf(IllegalStateException())
   println(response.payload) // OperationError(code=ILLEGAL_STATE, message=Illegal state exception)

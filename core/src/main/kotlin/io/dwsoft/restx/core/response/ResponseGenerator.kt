@@ -51,3 +51,36 @@ fun interface ResponseStatusProvider {
         fun providedBy(statusProvider: () -> HttpStatus) = ResponseStatusProvider { statusProvider() }
     }
 }
+
+/**
+ * Implementation of [ResponseGenerator] that supports defining different strategies of handling faults yet still
+ * preserves 'single entry' characteristic (in other words - typical application of composite pattern).
+ */
+class CompositeResponseGenerator(private val registry: ResponseGeneratorRegistry)
+    : ResponseGenerator<Any> {
+    private val log = initLog()
+
+    /**
+     * See [ResponseGenerator.responseOf].
+     *
+     * @throws NoSubGeneratorFound in case sub-generator for given [fault] type was not found
+     */
+    override fun responseOf(fault: Any): ErrorResponse {
+        log.info { "Searching generator for fault [$fault]" }
+        return registry.searchFor(fault)?.responseOf(fault) ?: throw NoSubGeneratorFound(fault)
+    }
+}
+
+class NoSubGeneratorFound(fault: Any) : RestXException("No sub-generator found for fault [$fault]")
+
+/**
+ * Interface of registers of [ResponseGenerator]s.
+ */
+interface ResponseGeneratorRegistry {
+    /**
+     * Function used to search for [ResponseGenerator] able to process given [fault].
+     *
+     * @return [ResponseGenerator] or null, if there is no generator able to process [fault] defined
+     */
+    fun <T : Any> searchFor(fault: T): ResponseGenerator<T>?
+}

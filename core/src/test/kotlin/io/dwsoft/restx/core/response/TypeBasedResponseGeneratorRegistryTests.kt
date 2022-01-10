@@ -1,11 +1,9 @@
 package io.dwsoft.restx.core.response
 
 import io.dwsoft.restx.core.dummy
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -72,17 +70,5 @@ class TypeBasedResponseGeneratorRegistryTests : FunSpec({
         registry.searchFor(IOException("ex3"))
 
         verify(exactly = 1) { generatorsMap[IOException::class] }
-    }
-})
-
-class TypeBasedResponseGeneratorRegistryBuilderTests : FunSpec({
-    test("configuration without any mapping throws exception") {
-        val invalidConfig = TypeBasedResponseGeneratorRegistry.Builder.Config()
-
-        with(invalidConfig) {
-            shouldThrow<IllegalArgumentException> {
-                TypeBasedResponseGeneratorRegistry.buildFrom(this)
-            }.message shouldContain "Response generator registry cannot be empty"
-        }
     }
 })

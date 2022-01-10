@@ -51,10 +51,10 @@ object RestX {
      *
      * @throws RestXConfigurationFailure in case of any errors during creation of a generator
      */
-    fun compose(initBlock: InitBlock<CompositeResponseGenerator.Builder.Config>) = buildGenerator {
-        CompositeResponseGenerator.Builder.Config()
+    fun compose(initBlock: InitBlock<CompositeResponseGeneratorBuilder.Config>) = buildGenerator {
+        CompositeResponseGeneratorBuilder.Config()
             .apply(initBlock)
-            .let { CompositeResponseGenerator.buildFrom(it) }
+            .let { CompositeResponseGeneratorBuilder.buildFrom(it) }
     }
 }
 

@@ -1,6 +1,5 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.core.cause.CauseProcessor
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.DataErrorSourceResolver
 import io.dwsoft.restx.core.cause.causeId
@@ -22,7 +21,7 @@ class SimpleResponseGeneratorBuilderTests : FunSpec({
         shouldThrow<IllegalArgumentException> {
             SimpleResponseGeneratorBuilder.buildFrom(
                 SimpleResponseGeneratorBuilder.Config<Any>().apply {
-                    status { dummy() }
+                    withStatus { dummy() }
                 }
             )
         }.message shouldContain "Payload generator factory block not set"
@@ -32,7 +31,7 @@ class SimpleResponseGeneratorBuilderTests : FunSpec({
         shouldThrow<IllegalArgumentException> {
             SimpleResponseGeneratorBuilder.buildFrom(
                 SimpleResponseGeneratorBuilder.Config<Any>().apply {
-                    payload { dummy() }
+                    representing { dummy() }
                 }
             )
         }.message shouldContain "Status provider factory block not set"
@@ -43,8 +42,8 @@ class SimpleResponseGeneratorBuilderTests : FunSpec({
             every { this@mock(any()) } returns dummy()
         }
         val config = SimpleResponseGeneratorBuilder.Config<Any>().apply {
-            payload(factoryBlock)
-            status { dummy() }
+            representing(factoryBlock)
+            withStatus { dummy() }
         }
 
         SimpleResponseGeneratorBuilder.buildFrom(config)
@@ -57,8 +56,8 @@ class SimpleResponseGeneratorBuilderTests : FunSpec({
             every { this@mock(any()) } returns dummy()
         }
         val config = SimpleResponseGeneratorBuilder.Config<Any>().apply {
-            payload { dummy() }
-            status(factoryBlock)
+            representing { dummy() }
+            withStatus(factoryBlock)
         }
 
         SimpleResponseGeneratorBuilder.buildFrom(config)
@@ -69,33 +68,31 @@ class SimpleResponseGeneratorBuilderTests : FunSpec({
 
 private typealias AnyErrorPayloadGeneratorFactoryBlock = ErrorPayloadGeneratorFactoryBlock<Any>
 
-class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
-    test("configuration without cause processor factory throws exception") {
+abstract class SingleErrorPayloadGeneratorBuilderTestsBase(
+    createConfig: (AnyCauseResolverFactoryBlock?, AnyCodeResolverFactoryBlock?, AnyMessageResolverFactoryBlock?)
+            -> SingleErrorPayloadGeneratorBuilderConfig<Any>,
+    buildGenerator: (SingleErrorPayloadGeneratorBuilderConfig<Any>) -> Unit,
+    additionalTests: InitBlock<FunSpec> = {}
+) : FunSpec({
+    test("configuration without message resolver factory throws exception") {
         shouldThrow<IllegalArgumentException> {
-            SingleErrorPayloadGeneratorBuilder.buildFrom(
-                SingleErrorPayloadGeneratorBuilder.Config<Any>().apply {
-                    identifiedBy { dummy() }
-                }
-            )
-        }.message shouldContain "Cause processor factory block not set"
+            buildGenerator(createConfig(null, null, null))
+        }.message shouldContain "Message resolver factory block not set"
     }
 
     test("configured cause resolver factory is called") {
         val factoryBlock = mock<AnyCauseResolverFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
-        val config = SingleErrorPayloadGeneratorBuilder.Config<Any>().apply {
-            identifiedBy(factoryBlock)
-            processedAs { dummy() }
-        }
+        val config = createConfig(factoryBlock, null) { dummy() }
 
-        SingleErrorPayloadGeneratorBuilder.buildFrom(config)
+        buildGenerator(config)
 
         verify { factoryBlock(CauseResolver.Factories) }
     }
 
     test("by default generator is configured with cause resolver identifying fault by its type") {
-        val defaultCauseResolver = SingleErrorPayloadGeneratorBuilder.Config<Any>()
+        val defaultCauseResolver = createConfig(null, null, dummy())
             .causeResolverFactoryBlock(CauseResolver.Factories)
 
         assertSoftly {
@@ -104,30 +101,96 @@ class SingleErrorPayloadGeneratorBuilderTests : FunSpec({
         }
     }
 
-    test("configured cause processor factory is called") {
-        val factoryBlock = mock<AnyCauseProcessorFactoryBlock> {
+    test("by default generator is configured with code resolver generating code same as cause id") {
+        val cause = Any().causeId("abc")
+        val defaultCodeResolver = createConfig(null, null, dummy())
+            .codeResolverFactoryBlock(CodeResolver.Factories)
+
+        defaultCodeResolver.codeFor(cause) shouldBe cause.id
+    }
+
+    test("configured message resolver factory is called") {
+        val factoryBlock = mock<AnyMessageResolverFactoryBlock> {
             every { this@mock(any()) } returns dummy()
         }
-        val config = SingleErrorPayloadGeneratorBuilder.Config<Any>().apply {
-            identifiedBy { dummy() }
-            processedAs(factoryBlock)
-        }
+        val config = createConfig(null, null, factoryBlock)
 
-        SingleErrorPayloadGeneratorBuilder.buildFrom(config)
+        buildGenerator(config)
 
-        verify { factoryBlock(CauseProcessors) }
+        verify { factoryBlock(MessageResolver.Factories) }
     }
+
+    apply(additionalTests)
 })
 
 private typealias AnyCauseResolverFactoryBlock = CauseResolverFactoryBlock<Any>
-private typealias AnyCauseProcessorFactoryBlock = CauseProcessorFactoryBlock<Any>
+private typealias AnyCodeResolverFactoryBlock = CodeResolverFactoryBlock<Any>
+private typealias AnyMessageResolverFactoryBlock = MessageResolverFactoryBlock<Any>
+
+class OperationErrorPayloadGeneratorBuilderTests : SingleErrorPayloadGeneratorBuilderTestsBase(
+    { causeResolverFactory: AnyCauseResolverFactoryBlock?, codeResolverFactory: AnyCodeResolverFactoryBlock?,
+        messageResolverFactory: AnyMessageResolverFactoryBlock? ->
+            OperationErrorPayloadGeneratorBuilder.Config<Any>().apply {
+                causeResolverFactory?.let { identifiedBy(it) }
+                codeResolverFactory?.let { withCode(it) }
+                messageResolverFactory?.let { withMessage(it) }
+            }
+    },
+    { config -> (config as OperationErrorPayloadGeneratorBuilder.Config<Any>)
+        .let { OperationErrorPayloadGeneratorBuilder.buildFrom(it) }
+    }
+)
+
+class RequestDataErrorPayloadGeneratorBuilderTests : SingleErrorPayloadGeneratorBuilderTestsBase(
+    { causeResolverFactory: AnyCauseResolverFactoryBlock?, codeResolverFactory: AnyCodeResolverFactoryBlock?,
+        messageResolverFactory: AnyMessageResolverFactoryBlock? ->
+            RequestDataErrorPayloadGeneratorBuilder.Config<Any>().apply {
+                causeResolverFactory?.let { identifiedBy(it) }
+                codeResolverFactory?.let { withCode(it) }
+                messageResolverFactory?.let { withMessage(it) }
+                pointingInvalidValue { dummy() }
+            }
+    },
+    { config -> (config as RequestDataErrorPayloadGeneratorBuilder.Config<Any>)
+        .let { RequestDataErrorPayloadGeneratorBuilder.buildFrom(it) }
+    },
+    {
+        test("configuration without data error source resolver factory throws exception") {
+            shouldThrow<IllegalArgumentException> {
+                RequestDataErrorPayloadGeneratorBuilder.buildFrom(
+                    RequestDataErrorPayloadGeneratorBuilder.Config<Any>().apply {
+                        withCode { dummy() }
+                        withMessage { dummy() }
+                    }
+                )
+            }.message shouldContain "Data error source resolver factory block not set"
+        }
+
+        test("configured data error source resolver factory is called") {
+            val factoryBlock = mock<AnyDataErrorSourceProviderFactoryBlock> {
+                every { this@mock(any()) } returns dummy()
+            }
+            val config = RequestDataErrorPayloadGeneratorBuilder.Config<Any>().apply {
+                withCode { dummy() }
+                withMessage { dummy() }
+                pointingInvalidValue(factoryBlock)
+            }
+
+            RequestDataErrorPayloadGeneratorBuilder.buildFrom(config)
+
+            verify { factoryBlock(DataErrorSourceResolver.Factories) }
+        }
+    }
+)
+
+private typealias AnyDataErrorSourceProviderFactoryBlock = DataErrorSourceResolverFactoryBlock<Any>
 
 class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
     test("configuration without sub-error extractor throws exception") {
         shouldThrow<IllegalArgumentException> {
             MultiErrorPayloadGeneratorBuilder.buildFrom(
                 MultiErrorPayloadGeneratorBuilder.Config<Any, Any>().apply {
-                    handledBy(dummy())
+                    eachHandledBy(dummy())
                 }
             )
         }.message shouldContain "Sub-error extractor must be provided"
@@ -143,111 +206,38 @@ class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
         }.message shouldContain "Sub-error payload generator must be provided"
     }
 
-    test("sub-error payload generator init block is called") {
-        val initBlock = mock<InitBlock<SingleErrorPayloadGeneratorBuilder.Config<Any>>>()
+    test("sub-error payload generator factory block is called") {
+        val factoryBlock = mock<AnySingleErrorPayloadGeneratorBuildersFactoryBlock>()
 
-        runCatching { MultiErrorPayloadGeneratorBuilder.Config<Any, Any>().whichAre(initBlock) }
+        runCatching { MultiErrorPayloadGeneratorBuilder.Config<Any, Any>().eachRepresenting(factoryBlock) }
 
-        verify { initBlock(any()) }
+        verify { factoryBlock(any()) }
     }
 })
 
-abstract class StandardCauseProcessorBuilderTestsBase(
-    createConfig: (CodeResolverFactoryBlock<Any>?, MessageResolverFactoryBlock<Any>?) -> StandardConfig<Any>,
-    buildProcessor: (StandardConfig<Any>) -> CauseProcessor<Any>,
-    additionalTestsInitBlock: InitBlock<FunSpec> = {}
-) : FunSpec({
-    test("configuration without message resolver factory throws exception") {
-        val config = createConfig(dummy(), null)
+private typealias AnySingleErrorPayloadGeneratorBuildersFactoryBlock =
+        SingleErrorPayloadGeneratorBuildersFactoryBlock<Any>
 
-        shouldThrow<IllegalArgumentException> { buildProcessor(config) }
-            .message shouldContain "Message resolver factory block not set"
-    }
+class CompositeResponseGeneratorBuilderTests : FunSpec({
+    test("configuration without registry factory block throws exception") {
+        val invalidConfig = CompositeResponseGeneratorBuilder.Config()
 
-    test("configured code resolver factory is called") {
-        val factoryBlock = mock<AnyCodeResolverFactoryBlock> {
-            every { this@mock(any()) } returns dummy()
-        }
-        val config = createConfig(factoryBlock) { dummy() }
-
-        buildProcessor(config)
-
-        verify { factoryBlock(CodeResolver.Factories) }
-    }
-
-    test("configured message resolver factory is called") {
-        val factoryBlock = mock<AnyMessageResolverFactoryBlock> {
-            every { this@mock(any()) } returns dummy()
-        }
-        val config = createConfig({ dummy() }, factoryBlock)
-
-        buildProcessor(config)
-
-        verify { factoryBlock(MessageResolver.Factories) }
-    }
-
-    test("by default standard processor is configured with code resolver based on fault cause id") {
-        val defaultCodeResolver = createConfig(null) { dummy() }.codeResolverFactoryBlock(CodeResolver.Factories)
-        val assertResolvedCodeIsEqualTo: (String) -> Unit = { defaultCodeResolver.codeFor(causeId(it)) shouldBe it }
-
-        assertSoftly {
-            assertResolvedCodeIsEqualTo("expected-id")
-            assertResolvedCodeIsEqualTo("expected-id-2")
-        }
-    }
-
-    this.apply(additionalTestsInitBlock)
-})
-
-private typealias AnyCodeResolverFactoryBlock = CodeResolverFactoryBlock<Any>
-private typealias AnyMessageResolverFactoryBlock = MessageResolverFactoryBlock<Any>
-
-class OperationErrorProcessorBuilderTests : StandardCauseProcessorBuilderTestsBase(
-    { codeResolverFactory, messageResolverFactory ->
-        OperationErrorProcessorBuilder.Config<Any>().apply {
-            codeResolverFactory?.let { code(it) }
-            messageResolverFactory?.let { message(it) }
-        }
-    },
-    { OperationErrorProcessorBuilder.buildFrom(it as OperationErrorProcessorBuilder.Config<Any>) }
-)
-
-class RequestDataErrorProcessorBuilderTests : StandardCauseProcessorBuilderTestsBase(
-    { codeResolverFactory, messageResolverFactory ->
-        RequestDataErrorProcessorBuilder.Config<Any>().apply {
-            codeResolverFactory?.let { code(it) }
-            messageResolverFactory?.let { message(it) }
-            invalidValue { dummy() }
-        }
-    },
-    { RequestDataErrorProcessorBuilder.buildFrom(it as RequestDataErrorProcessorBuilder.Config<Any>) },
-    {
-        test("configuration without data error source resolver factory throws exception") {
+        with(invalidConfig) {
             shouldThrow<IllegalArgumentException> {
-                RequestDataErrorProcessorBuilder.buildFrom(
-                    RequestDataErrorProcessorBuilder.Config<Any>().apply {
-                        code { dummy() }
-                        message { dummy() }
-                    }
-                )
-            }.message shouldContain "Data error source resolver factory block not set"
-        }
-
-        test("configured data error source resolver factory is called") {
-            val factoryBlock = mock<AnyDataErrorSourceProviderFactoryBlock> {
-                every { this@mock(any()) } returns dummy()
-            }
-            val config = RequestDataErrorProcessorBuilder.Config<Any>().apply {
-                code { dummy() }
-                message { dummy() }
-                invalidValue(factoryBlock)
-            }
-
-            RequestDataErrorProcessorBuilder.buildFrom(config)
-
-            verify { factoryBlock(DataErrorSourceResolver.Factories) }
+                CompositeResponseGeneratorBuilder.buildFrom(this)
+            }.message shouldContain "Sub-generator registry factory block not set"
         }
     }
-)
+})
 
-private typealias AnyDataErrorSourceProviderFactoryBlock = DataErrorSourceResolverFactoryBlock<Any>
+class TypeBasedResponseGeneratorRegistryBuilderTests : FunSpec({
+    test("configuration without any mapping throws exception") {
+        val invalidConfig = TypeBasedResponseGeneratorRegistryBuilder.Config()
+
+        with(invalidConfig) {
+            shouldThrow<IllegalArgumentException> {
+                TypeBasedResponseGeneratorRegistryBuilder.buildFrom(this)
+            }.message shouldContain "Response generator registry cannot be empty"
+        }
+    }
+})

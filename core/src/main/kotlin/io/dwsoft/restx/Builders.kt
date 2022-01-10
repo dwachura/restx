@@ -1,7 +1,5 @@
 package io.dwsoft.restx
 
-import io.dwsoft.restx.core.cause.Cause
-import io.dwsoft.restx.core.cause.CauseProcessor
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.DataErrorSourceResolver
 import io.dwsoft.restx.core.cause.OperationErrorProcessor
@@ -12,9 +10,14 @@ import io.dwsoft.restx.core.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.SingleErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.SubErrorExtractor
+import io.dwsoft.restx.core.response.CompositeResponseGenerator
+import io.dwsoft.restx.core.response.HttpStatus
 import io.dwsoft.restx.core.response.ResponseGenerator
+import io.dwsoft.restx.core.response.ResponseGeneratorRegistry
 import io.dwsoft.restx.core.response.ResponseStatusProvider
 import io.dwsoft.restx.core.response.SimpleResponseGenerator
+import io.dwsoft.restx.core.response.TypeBasedResponseGeneratorRegistry
+import kotlin.reflect.KClass
 
 object SimpleResponseGeneratorBuilder {
     fun <T : Any> buildFrom(config: Config<T>): ResponseGenerator<T> {
@@ -31,92 +34,79 @@ object SimpleResponseGeneratorBuilder {
     }
 
     class Config<T : Any> {
-        var errorPayloadGeneratorFactoryBlock: (ErrorPayloadGeneratorFactoryBlock<T>)? = null
+        var errorPayloadGeneratorFactoryBlock: ErrorPayloadGeneratorFactoryBlock<T>? = null
             private set
-        var responseStatusProviderFactoryBlock: (ResponseStatusProviderFactoryBlock)? = null
+        var responseStatusProviderFactoryBlock: ResponseStatusProviderFactoryBlock? = null
             private set
 
-        fun payload(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) = this.apply {
+        /**
+         * Opens configuration block of [ErrorPayloadGenerator].
+         */
+        fun representing(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) = this.apply {
             errorPayloadGeneratorFactoryBlock = factoryBlock
         }
 
-        fun processedAs(factoryBlock: ErrorPayloadGeneratorFactoryBlock<T>) = this.apply {
-            errorPayloadGeneratorFactoryBlock = factoryBlock
-        }
-
-        fun status(factoryBlock: ResponseStatusProviderFactoryBlock) = this.apply {
+        /**
+         * Opens configuration block of [ResponseStatusProvider].
+         */
+        fun withStatus(factoryBlock: ResponseStatusProviderFactoryBlock) = this.apply {
             responseStatusProviderFactoryBlock = factoryBlock
         }
+
+        /**
+         * Overloaded version of [withStatus] taking [number][status] to create provider
+         * returning it as a [status code][HttpStatus.code].
+         */
+        fun withStatus(status: Int) = withStatus { of(status) }
     }
 }
 
 typealias ErrorPayloadGeneratorFactoryBlock<T> =
         FactoryBlock<ErrorPayloadGeneratorBuilders<T>, ErrorPayloadGenerator<T, *>>
-typealias ResponseStatusProviderFactoryBlock = FactoryBlock<ResponseStatusProvider.Factories, ResponseStatusProvider>
+typealias ResponseStatusProviderFactoryBlock =
+        FactoryBlock<ResponseStatusProvider.Factories, ResponseStatusProvider>
 
 /**
- * Extension function serving as a shortcut to configure response generator builder to create
- * generator of responses with passed status value.
+ * Facade to single error payload generators builders
  */
-fun <T : Any> SimpleResponseGeneratorBuilder.Config<T>.status(status: Int) = status { of(status) }
-
-
-/**
- * Facade to payload generators builders
- */
-class ErrorPayloadGeneratorBuilders<T : Any> {
-    fun error(
-        initBlock: InitBlock<SingleErrorPayloadGeneratorBuilder.Config<T>>
+sealed interface SingleErrorPayloadGeneratorBuilders<T : Any> {
+    fun operationError(
+        initBlock: InitBlock<OperationErrorPayloadGeneratorBuilder.Config<T>>
     ): SingleErrorPayloadGenerator<T> =
-        SingleErrorPayloadGeneratorBuilder.buildFrom(
-            SingleErrorPayloadGeneratorBuilder.Config<T>().apply(initBlock)
+        OperationErrorPayloadGeneratorBuilder.buildFrom(
+            OperationErrorPayloadGeneratorBuilder.Config<T>().apply(initBlock)
         )
 
-    fun <R : Any> subErrors(
+    fun requestDataError(
+        initBlock: InitBlock<RequestDataErrorPayloadGeneratorBuilder.Config<T>>
+    ): SingleErrorPayloadGenerator<T> =
+        RequestDataErrorPayloadGeneratorBuilder.buildFrom(
+            RequestDataErrorPayloadGeneratorBuilder.Config<T>().apply(initBlock)
+        )
+}
+
+private class InstantiableSingleErrorPayloadGeneratorBuilders<T : Any> : SingleErrorPayloadGeneratorBuilders<T>
+
+/**
+ * Facade to multi error payload generators builders
+ */
+class ErrorPayloadGeneratorBuilders<T : Any> : SingleErrorPayloadGeneratorBuilders<T> {
+    fun <R : Any> compositeOf(
         initBlock: InitBlock<MultiErrorPayloadGeneratorBuilder.Config<T, R>>
     ): MultiErrorPayloadGenerator<T, R> =
         MultiErrorPayloadGeneratorBuilder.buildFrom(
             MultiErrorPayloadGeneratorBuilder.Config<T, R>().apply(initBlock)
         )
-}
-
-object SingleErrorPayloadGeneratorBuilder {
-    fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
-        val causeProcessorFactoryBlock =
-            config.causeProcessorFactoryBlock
-                ?: throw IllegalArgumentException("Cause processor factory block not set")
-        return SingleErrorPayloadGenerator(
-            config.causeResolverFactoryBlock(CauseResolver.Factories),
-            causeProcessorFactoryBlock(CauseProcessors)
-        )
-    }
 
     /**
-     * Configuration for [SingleErrorPayloadGenerator]'s [Builder].
-     *
-     * If not explicitly [configured][identifiedBy], passed faults are [identified by their runtime type name]
-     * [CauseResolver.Factories.type].
+     * Delegate of [compositeOf]. May be more readable in some situations.
      */
-    class Config<T : Any> {
-        var causeResolverFactoryBlock: (CauseResolverFactoryBlock<T>) = { CauseResolver.Factories.type() }
-            private set
-        var causeProcessorFactoryBlock: (CauseProcessorFactoryBlock<T>)? = null
-            private set
-
-        fun identifiedBy(factoryBlock: CauseResolverFactoryBlock<T>) = this.apply {
-            causeResolverFactoryBlock = factoryBlock
-        }
-
-        fun withId(fixedId: String) = identifiedBy { CauseResolver.Factories.fixedId(fixedId) }
-
-        fun processedAs(factoryBlock: CauseProcessorFactoryBlock<T>) = this.apply {
-            causeProcessorFactoryBlock = factoryBlock
-        }
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun <R : Any> compositeOfErrorsOfType(
+        faultObjectsType: KClass<T>,
+        initBlock: InitBlock<MultiErrorPayloadGeneratorBuilder.Config<T, R>>
+    ): MultiErrorPayloadGenerator<T, R> = compositeOf(initBlock)
 }
-
-typealias CauseResolverFactoryBlock<T> = FactoryBlock<CauseResolver.Factories, CauseResolver<T>>
-typealias CauseProcessorFactoryBlock<T> = FactoryBlock<CauseProcessors, CauseProcessor<T>>
 
 object MultiErrorPayloadGeneratorBuilder {
     fun <T : Any, R : Any> buildFrom(config: Config<T, R>): MultiErrorPayloadGenerator<T, R> {
@@ -130,129 +120,210 @@ object MultiErrorPayloadGeneratorBuilder {
     }
 
     class Config<T : Any, R : Any> {
-        var subErrorExtractor: (SubErrorExtractor<T, R>)? = null
+        var subErrorExtractor: SubErrorExtractor<T, R>? = null
             private set
-        var subErrorPayloadGenerator: (SingleErrorPayloadGenerator<R>)? = null
+        var subErrorPayloadGenerator: SingleErrorPayloadGenerator<R>? = null
             private set
 
+        /**
+         * Opens configuration block of [SubErrorExtractor].
+         */
         fun extractedAs(extractor: SubErrorExtractor<T, R>) = this.apply {
             subErrorExtractor = extractor
         }
 
-        fun handledBy(generator: SingleErrorPayloadGenerator<R>) = this.apply {
+        /**
+         * Sets [generator] that will be used to process
+         * [extracted][MultiErrorPayloadGenerator.subErrorExtractor] sub-errors.
+         */
+        fun eachHandledBy(generator: SingleErrorPayloadGenerator<R>) = this.apply {
             subErrorPayloadGenerator = generator
         }
 
-        fun whichAre(initBlock: InitBlock<SingleErrorPayloadGeneratorBuilder.Config<R>>) = handledBy(
-            SingleErrorPayloadGeneratorBuilder.Config<R>().apply(initBlock)
-                .let { SingleErrorPayloadGeneratorBuilder.buildFrom(it) }
-        )
+        /**
+         * Opens configuration block of [SingleErrorPayloadGenerator].
+         */
+        fun eachRepresenting(factoryBlock: SingleErrorPayloadGeneratorBuildersFactoryBlock<R>) =
+            eachHandledBy(factoryBlock(InstantiableSingleErrorPayloadGeneratorBuilders()))
     }
 }
 
+typealias SingleErrorPayloadGeneratorBuildersFactoryBlock<T> =
+        FactoryBlock<SingleErrorPayloadGeneratorBuilders<T>, SingleErrorPayloadGenerator<T>>
+
 /**
- * Standard implementation of configuration for [CauseProcessor]'s builders.
+ * Base configuration for [SingleErrorPayloadGenerator]'s builders.
  *
- * If not explicitly [configured][code], objects produced by such processor have their
- * code equal to [id of the fault object][Cause.id] for which are generated.
+ * Passed faults, by default:
+ *  - are identified by [their runtime type name][CauseResolver.Factories.type] 
+ *  (if not explicitly [configured][identifiedBy])
+ *  - have the code [the same as their cause's id][CodeResolver.Factories.sameAsCauseId] 
+ *  (if not explicitly [configured][withCode])
  */
-sealed class StandardConfig<T : Any> {
+sealed class SingleErrorPayloadGeneratorBuilderConfig<T : Any> {
+    var causeResolverFactoryBlock: CauseResolverFactoryBlock<T> = { type() }
+        private set
     var codeResolverFactoryBlock: CodeResolverFactoryBlock<T> = { sameAsCauseId() }
         private set
-    var messageResolverFactoryBlock: (MessageResolverFactoryBlock<T>)? = null
+    var messageResolverFactoryBlock: MessageResolverFactoryBlock<T>? = null
         private set
 
-    fun code(factoryBlock: CodeResolverFactoryBlock<T>) = this.apply {
-        codeResolverFactoryBlock = factoryBlock
-    }
-
-    fun message(factoryBlock: MessageResolverFactoryBlock<T>) = this.apply {
-        messageResolverFactoryBlock = factoryBlock
-    }
-}
-
-typealias CodeResolverFactoryBlock<T> = FactoryBlock<CodeResolver.Factories, CodeResolver<T>>
-typealias MessageResolverFactoryBlock<T> = FactoryBlock<MessageResolver.Factories, MessageResolver<T>>
-
-/**
- * Extension function serving as a shortcut to configure cause processor builder to create
- * processor with [fixed code resolver][CodeResolver.Factories.fixed].
- */
-fun <T : Any> StandardConfig<T>.code(fixed: String) = code { fixed(fixed) }
-
-/**
- * Extension function serving as a shortcut to configure cause processor builder to create
- * processor with [fixed message resolver][MessageResolver.Factories.fixed].
- */
-fun <T : Any> StandardConfig<T>.message(fixed: String) = message { fixed(fixed) }
-
-object OperationErrorProcessorBuilder {
-    fun <T : Any> buildFrom(config: Config<T>): OperationErrorProcessor<T> {
-        val messageResolverFactoryBlock =
-            config.messageResolverFactoryBlock
-                ?: throw IllegalArgumentException("Message resolver factory block not set")
-        return OperationErrorProcessor(
-            config.codeResolverFactoryBlock(CodeResolver.Factories),
-            messageResolverFactoryBlock(MessageResolver.Factories)
-        )
+    /**
+     * Opens configuration block of [CauseResolver].
+     */
+    fun identifiedBy(factoryBlock: CauseResolverFactoryBlock<T>) = this.apply {
+        causeResolverFactoryBlock = factoryBlock
     }
 
     /**
-     * Configuration of [OperationErrorProcessor]'s [Builder].
+     * Overloaded version of [identifiedBy] returning [fixed resolver][CauseResolver.fixedId].
      */
-    class Config<T : Any> : StandardConfig<T>()
+    fun identifiedBy(fixedId: String) = identifiedBy { fixedId(fixedId) }
+
+    /**
+     * Opens configuration block of [CodeResolver].
+     */
+    fun withCode(factoryBlock: CodeResolverFactoryBlock<T>) = this.apply {
+        codeResolverFactoryBlock = factoryBlock
+    }
+
+    /**
+     * Overloaded version of [withCode] returning [fixed resolver][CodeResolver.fixed].
+     */
+    fun withCode(code: String) = this.apply {
+        codeResolverFactoryBlock = { fixed(code) }
+    }
+
+    /**
+     * Opens configuration block of [MessageResolver].
+     */
+    fun withMessage(factoryBlock: MessageResolverFactoryBlock<T>) = this.apply {
+        messageResolverFactoryBlock = factoryBlock
+    }
+
+    /**
+     * Overloaded version of [withMessage] returning [fixed resolver][MessageResolver.fixed].
+     */
+    fun withMessage(message: String) = this.apply {
+        messageResolverFactoryBlock = { fixed(message) }
+    }
 }
 
-object RequestDataErrorProcessorBuilder {
-    fun <T : Any> buildFrom(config: Config<T>): RequestDataErrorProcessor<T> {
+typealias CauseResolverFactoryBlock<T> = FactoryBlock<CauseResolver.Factories, CauseResolver<T>>
+typealias CodeResolverFactoryBlock<T> = FactoryBlock<CodeResolver.Factories, CodeResolver<T>>
+typealias MessageResolverFactoryBlock<T> = FactoryBlock<MessageResolver.Factories, MessageResolver<T>>
+
+object OperationErrorPayloadGeneratorBuilder {
+    fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
+        val messageResolverFactoryBlock =
+            config.messageResolverFactoryBlock
+                ?: throw IllegalArgumentException("Message resolver factory block not set")
+        return SingleErrorPayloadGenerator(
+            config.causeResolverFactoryBlock(CauseResolver.Factories),
+            OperationErrorProcessor(
+                config.codeResolverFactoryBlock(CodeResolver.Factories),
+                messageResolverFactoryBlock(MessageResolver.Factories)
+            )
+        )
+    }
+
+    class Config<T : Any> : SingleErrorPayloadGeneratorBuilderConfig<T>()
+}
+
+object RequestDataErrorPayloadGeneratorBuilder {
+    fun <T : Any> buildFrom(config: Config<T>): SingleErrorPayloadGenerator<T> {
         val messageResolverFactoryBlock =
             config.messageResolverFactoryBlock
                 ?: throw IllegalArgumentException("Message resolver factory block not set")
         val dataErrorSourceResolverFactoryBlock =
             config.dataErrorSourceResolverFactoryBlock
                 ?: throw IllegalArgumentException("Data error source resolver factory block not set")
-        return RequestDataErrorProcessor(
-            config.codeResolverFactoryBlock(CodeResolver.Factories),
-            messageResolverFactoryBlock(MessageResolver.Factories),
-            dataErrorSourceResolverFactoryBlock(DataErrorSourceResolver.Factories)
+        return SingleErrorPayloadGenerator(
+            config.causeResolverFactoryBlock(CauseResolver.Factories),
+            RequestDataErrorProcessor(
+                config.codeResolverFactoryBlock(CodeResolver.Factories),
+                messageResolverFactoryBlock(MessageResolver.Factories),
+                dataErrorSourceResolverFactoryBlock(DataErrorSourceResolver.Factories)
+            )
         )
     }
 
-    /**
-     * Configuration of [RequestDataErrorProcessor]'s [Builder].
-     */
-    class Config<T : Any> : StandardConfig<T>() {
+    class Config<T : Any> : SingleErrorPayloadGeneratorBuilderConfig<T>() {
         var dataErrorSourceResolverFactoryBlock: DataErrorSourceResolverFactoryBlock<T>? = null
             private set
 
-        fun invalidValue(factoryBlock: DataErrorSourceResolverFactoryBlock<T>) = this.apply {
+        /**
+         * Opens configuration block of [DataErrorSourceResolver].
+         */
+        fun pointingInvalidValue(factoryBlock: DataErrorSourceResolverFactoryBlock<T>) = this.apply {
             dataErrorSourceResolverFactoryBlock = factoryBlock
         }
     }
 }
 
-typealias DataErrorSourceResolverFactoryBlock<T> = FactoryBlock<DataErrorSourceResolver.Factories, DataErrorSourceResolver<T>>
+typealias DataErrorSourceResolverFactoryBlock<T> =
+        FactoryBlock<DataErrorSourceResolver.Factories, DataErrorSourceResolver<T>>
 
-/**
- * Factories of [CauseProcessor]s.
- * Additional factory methods should be added as an extension functions.
- */
-object CauseProcessors {
-    /**
-     * Factory method that creates [processor handling request processing errors][OperationErrorProcessor].
-     */
-    fun <T : Any> operationError(
-        initBlock: InitBlock<OperationErrorProcessorBuilder.Config<T>>
-    ): CauseProcessor<T> = OperationErrorProcessorBuilder.buildFrom(
-        OperationErrorProcessorBuilder.Config<T>().apply(initBlock)
-    )
+object CompositeResponseGeneratorBuilder {
+    fun buildFrom(config: Config): CompositeResponseGenerator {
+        val responseGeneratorRegistryFactoryBlock =
+            config.responseGeneratorRegistryFactoryBlock
+                ?: throw IllegalArgumentException("Sub-generator registry factory block not set")
+        return CompositeResponseGenerator(responseGeneratorRegistryFactoryBlock(Unit))
+    }
 
-    /**
-     * Factory method that creates [processor handling invalid request data errors][RequestDataErrorProcessor].
-     */
-    fun <T : Any> requestDataError(
-        initBlock: InitBlock<RequestDataErrorProcessorBuilder.Config<T>>
-    ): CauseProcessor<T> = RequestDataErrorProcessorBuilder.buildFrom(
-        RequestDataErrorProcessorBuilder.Config<T>().apply(initBlock)
-    )
+    class Config {
+        var responseGeneratorRegistryFactoryBlock: ResponseGeneratorRegistryFactoryBlock? = null
+            private set
+
+        /**
+         * Configures [TypeBasedResponseGeneratorRegistry] to be used as [generator's][CompositeResponseGenerator]
+         * source of sub-generators.
+         */
+        fun registeredByFaultType(
+            initBlock: InitBlock<TypeBasedResponseGeneratorRegistryBuilder.Config>
+        ) = this.apply {
+            responseGeneratorRegistryFactoryBlock = {
+                TypeBasedResponseGeneratorRegistryBuilder.Config()
+                    .apply(initBlock)
+                    .let { TypeBasedResponseGeneratorRegistryBuilder.buildFrom(it) }
+            }
+        }
+    }
 }
+
+typealias ResponseGeneratorRegistryFactoryBlock = FactoryBlock<Unit, ResponseGeneratorRegistry>
+
+object TypeBasedResponseGeneratorRegistryBuilder {
+    fun buildFrom(config: Config): TypeBasedResponseGeneratorRegistry =
+        TypeBasedResponseGeneratorRegistry(
+            config.generatorsByFaultType.takeIf { it.isNotEmpty() }
+                ?: throw IllegalArgumentException("Response generator registry cannot be empty")
+        )
+
+    class Config {
+        var generatorsByFaultType: MutableMap<KClass<*>, ResponseGenerator<*>> = mutableMapOf()
+            private set
+
+        /**
+         * Registers passed [mapping][pair] between fault's type and [ResponseGenerator].
+         */
+        fun <T : Any> map(pair: Pair<KClass<T>, ResponseGenerator<T>>) =
+            this.apply { generatorsByFaultType.plusAssign(pair) }
+
+        /**
+         * Overloaded version of [map], that opens configuration block of mapping
+         * between [fault's type][faultType] and [ResponseGenerator].
+         */
+        fun <T : Any> map(faultType: KClass<T>, generatorFactoryBlock: ResponseGeneratorFactoryBlock<T>) =
+            map(faultType to generatorFactoryBlock(RestX))
+
+        /**
+         * Overloaded, inline version of [map].
+         */
+        inline fun <reified T : Any> register(generatorFactoryBlock: ResponseGeneratorFactoryBlock<T>) =
+            map(T::class to generatorFactoryBlock(RestX))
+    }
+}
+
+typealias ResponseGeneratorFactoryBlock<T> = FactoryBlock<RestX, ResponseGenerator<T>>
