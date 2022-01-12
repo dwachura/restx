@@ -27,9 +27,11 @@ class TypeBasedResponseGeneratorRegistry(
         @Suppress("UNCHECKED_CAST")
         return runBlocking {
             log.info { "Searching generator for $fault" }
-            log.debug { "Cache: $cache" }
-            cache.getOrPut(fault::class) {
-                async { searchRecursively(ArrayDeque(listOf(fault::class))) }
+            synchronized(cache) {
+                log.debug { "Cache: $cache" }
+                cache.getOrPut(fault::class) {
+                    async { searchRecursively(ArrayDeque(listOf(fault::class))) }
+                }
             }.await()
         } as ResponseGenerator<T>?
     }
@@ -42,7 +44,7 @@ class TypeBasedResponseGeneratorRegistry(
                     this.supertypes.forEach { queue.addLast(it.classifier as KClass<*>) }
                     searchRecursively(queue)
                 }
-                    )
+            )
         }
     }
 }
