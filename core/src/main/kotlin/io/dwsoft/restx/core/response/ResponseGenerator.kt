@@ -21,7 +21,7 @@ sealed interface ResponseGenerator<T : Any> {
 }
 
 /**
- * Default implementation of [ResponseGenerator].
+ * Default implementation of [ResponseGenerator], that is responsible for handling faults of specified type.
  */
 class SimpleResponseGenerator<T : Any>(
     private val payloadGenerator: ErrorPayloadGenerator<T, *>,
