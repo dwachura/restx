@@ -15,12 +15,10 @@ import io.mockk.verify
 
 class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with code the same as object type is created") {
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                withMessage { dummy() }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            withMessage { dummy() }
             withStatus { dummy() }
-        }
+        } }
 
         generator.responseOf(Any())
             .payload.shouldBeTypeOf<OperationError>()
@@ -29,13 +27,11 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with fixed code is created") {
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                withCode(expectedCode)
-                withMessage { dummy() }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            withCode(expectedCode)
+            withMessage { dummy() }
             withStatus { dummy() }
-        }
+        } }
 
         generator.responseOf(Any())
             .payload.shouldBeTypeOf<OperationError>()
@@ -44,13 +40,11 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with custom generated code is created") {
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                withCode { generatedAs { expectedCode } }
-                withMessage { dummy() }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            withCode { generatedAs { expectedCode } }
+            withMessage { dummy() }
             withStatus { dummy() }
-        }
+        } }
 
         generator.responseOf(Any())
             .payload.shouldBeTypeOf<OperationError>()
@@ -60,14 +54,12 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with map-based code is created") {
         val causeId = "id"
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                identifiedBy(causeId)
-                withCode { mapBased(causeId to expectedCode) }
-                withMessage { dummy() }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            identifiedBy(causeId)
+            withCode { mapBased(causeId to expectedCode) }
+            withMessage { dummy() }
             withStatus { dummy() }
-        }
+        } }
 
         generator.responseOf(Any())
             .payload.shouldBeTypeOf<OperationError>()
@@ -76,12 +68,10 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with fixed message is created") {
         val expectedMessage = "message"
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                withMessage(expectedMessage)
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            withMessage(expectedMessage)
             withStatus { dummy() }
-        }
+        } }
 
         generator.responseOf(Any())
             .payload.shouldBeTypeOf<OperationError>()
@@ -90,12 +80,10 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with custom generated message is created") {
         val faultResult = RuntimeException("message")
-        val generator = RestX.respondTo<Exception> {
-            representing { operationError {
-                withMessage { generatedAs { context.message!! } }
-            } }
+        val generator = RestX.respondTo<Exception> { asOperationError {
+            withMessage { generatedAs { context.message!! } }
             withStatus { dummy() }
-        }
+        } }
 
         val response = generator.responseOf(faultResult)
 
@@ -106,13 +94,11 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with map-based message is created") {
         val causeId = "id"
         val expectedMessage = "message"
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                identifiedBy(causeId)
-                withMessage { mapBased(causeId to expectedMessage) }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            identifiedBy(causeId)
+            withMessage { mapBased(causeId to expectedMessage) }
             withStatus { dummy() }
-        }
+        } }
 
         val response = generator.responseOf(Any())
 
@@ -122,12 +108,10 @@ class RestXConfigurationTests : FunSpec({
 
     test("single error payload with defined status is created") {
         val status = 500
-        val generator = RestX.respondTo<Any> {
-            representing { operationError {
-                withMessage { dummy() }
-            } }
+        val generator = RestX.respondTo<Any> { asOperationError {
+            withMessage { dummy() }
             withStatus(status)
-        }
+        } }
 
         val response = generator.responseOf(Any())
 
@@ -138,15 +122,11 @@ class RestXConfigurationTests : FunSpec({
         class InvalidInput(val type: Source.Type, val location: String, val message: String)
         val expectedSource = Source.queryParam("queryParam1")
         val expectedMessage = "Invalid value in query param"
-        val generator = RestX.respondTo<InvalidInput> {
-            representing { requestDataError {
-                withMessage { generatedAs { context.message } }
-                pointingInvalidValue { resolvedBy { cause ->
-                    cause.context.let { it.type.toSource(it.location) }
-                } }
-            } }
+        val generator = RestX.respondTo<InvalidInput> { asRequestDataError {
+            withMessage { generatedAs { context.message } }
+            pointingInvalidValue { resolvedBy { cause -> cause.context.let { it.type.toSource(it.location) } } }
             withStatus { dummy() }
-        }
+        } }
 
         val response = generator.responseOf(
             InvalidInput(expectedSource.type, expectedSource.location, expectedMessage)
@@ -163,15 +143,13 @@ class RestXConfigurationTests : FunSpec({
         val subError2 = IllegalArgumentException("Bad argument")
         val subError3 = NumberFormatException("Wrong number")
         val fault = MultiExceptionFaultResult(subError1, subError2, subError3)
-        val generator = RestX.respondTo<MultiExceptionFaultResult> {
-            representing { compositeOf<Exception> {
-                extractedAs { it.errors.asList() }
-                eachRepresenting { operationError {
-                    withMessage { generatedAs { context.message!! } }
-                } }
+        val generator = RestX.respondTo<MultiExceptionFaultResult> { asCompositeOf<Exception> {
+            extractedAs { it.errors.asList() }
+            eachRepresenting { operationError {
+                withMessage { generatedAs { context.message!! } }
             } }
             withStatus(500)
-        }
+        } }
 
         val response = generator.responseOf(fault)
 

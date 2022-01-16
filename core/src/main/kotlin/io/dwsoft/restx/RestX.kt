@@ -15,19 +15,12 @@ object RestX {
      *
      * @throws RestXConfigurationFailure in case of any errors during creation of a generator
      */
-    fun <T : Any> respondTo(initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>) = buildGenerator {
-        SimpleResponseGeneratorBuilder.Config<T>()
-            .apply(initBlock)
-            .let { SimpleResponseGeneratorBuilder.buildFrom(it) }
-    }
+    fun <T : Any> respondTo(
+        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+    ) = buildGenerator { factoryBlock.invoke(SimpleResponseGeneratorBuilders()) }
 
     private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
         runCatching(buildFunction).onFailure { RestXConfigurationFailure(it) }.getOrThrow()
-
-    /**
-     * Delegate of [respondTo].
-     */
-    fun <T : Any> generator(initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>) = respondTo(initBlock)
 
     /**
      * Delegate of [respondTo]. May be more readable in some situations.
@@ -35,24 +28,31 @@ object RestX {
     @Suppress("UNUSED_PARAMETER")
     fun <T : Any> respondToFaultOfType(
         faultObjectsType: KClass<T>,
-        initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>
-    ): ResponseGenerator<T> = respondTo(initBlock)
+        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+    ) = respondTo(factoryBlock)
 
     /**
-     * Delegate of [respondToFaultOfType].
+     * Delegate of [respondTo].
      */
-    fun <T : Any> generator(
+    fun <T : Any> generatorFor(
+        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+    ) = respondTo(factoryBlock)
+
+    /**
+     * Delegate of [generatorFor].
+     */
+    fun <T : Any> generatorForFaultsOfType(
         faultObjectsType: KClass<T>,
-        initBlock: InitBlock<SimpleResponseGeneratorBuilder.Config<T>>
-    ) = respondToFaultOfType(faultObjectsType, initBlock)
+        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+    ) = generatorFor(factoryBlock)
 
     /**
      * Entry method to fluently configure [CompositeResponseGenerator]s.
      *
      * @throws RestXConfigurationFailure in case of any errors during creation of a generator
      */
-    fun compose(initBlock: InitBlock<CompositeResponseGeneratorBuilder.Config>) = buildGenerator {
-        CompositeResponseGeneratorBuilder.Config()
+    fun compose(initBlock: InitBlock<CompositeResponseGeneratorDsl>) = buildGenerator {
+        CompositeResponseGeneratorBuilder.Dsl()
             .apply(initBlock)
             .let { CompositeResponseGeneratorBuilder.buildFrom(it) }
     }
