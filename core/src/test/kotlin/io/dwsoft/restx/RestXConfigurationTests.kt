@@ -143,7 +143,7 @@ class RestXConfigurationTests : FunSpec({
         val subError2 = IllegalArgumentException("Bad argument")
         val subError3 = NumberFormatException("Wrong number")
         val fault = MultiExceptionFaultResult(subError1, subError2, subError3)
-        val generator = RestX.respondTo<MultiExceptionFaultResult> { asCompositeOf<Exception> {
+        val generator = RestX.respondTo<MultiExceptionFaultResult> { asContainerOf<Exception> {
             extractedAs { it.errors.asList() }
             eachRepresenting { operationError {
                 withMessage { generatedAs { context.message!! } }

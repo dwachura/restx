@@ -105,7 +105,7 @@ println(response.payload) // OperationError(code=IO_FAILURE, message=Mapped mess
 Below generator will return multi-error payloads:
 
 ```kotlin
-  val generator = RestX.respondTo<List<Exception>> { asCompositeOf<Exception> {
+  val generator = RestX.respondTo<List<Exception>> { asContainerOf<Exception> {
     extractedAs { it }
     eachRepresenting { operationError {
       withMessage { generatedAs { context.localizedMessage } }

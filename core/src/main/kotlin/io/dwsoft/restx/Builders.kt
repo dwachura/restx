@@ -295,17 +295,25 @@ sealed interface SimpleResponseGeneratorDsl<T : Any> {
 typealias ResponseStatusProviderFactoryBlock = FactoryBlock<ResponseStatusProvider.Factories, ResponseStatusProvider>
 
 /**
+ * Configuration DSL serving as a point of DSL's extension, common for [SimpleResponseGenerator]s, which produce
+ * responses containing single error payloads.
+ */
+sealed interface SingleErrorResponseGeneratorDsl<T : Any> :
+    SimpleResponseGeneratorDsl<T>,
+    SingleErrorPayloadGeneratorDsl<T>
+
+/**
  * Configuration DSL for [SimpleResponseGenerator]s, which produce responses for [OperationError].
  */
 sealed interface OperationErrorResponseGeneratorDsl<T : Any> :
-    SimpleResponseGeneratorDsl<T>,
+    SingleErrorResponseGeneratorDsl<T>,
     OperationErrorPayloadGeneratorDsl<T>
 
 /**
  * Configuration DSL for [SimpleResponseGenerator]s, which produce responses for [RequestDataError].
  */
 sealed interface RequestDataErrorResponseGeneratorDsl<T : Any> :
-    SimpleResponseGeneratorDsl<T>,
+    SingleErrorResponseGeneratorDsl<T>,
     RequestDataErrorPayloadGeneratorDsl<T>
 
 /**
@@ -366,7 +374,7 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [OperationErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorDsl.Default]
+         *  - [SimpleResponseGeneratorBuilder.Dsl]
          *  - [OperationErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any> :
@@ -384,7 +392,7 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [RequestDataErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorDsl.Default]
+         *  - [SimpleResponseGeneratorBuilder.Dsl]
          *  - [RequestDataErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any> :
@@ -402,7 +410,7 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [MultiErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorDsl.Default]
+         *  - [SimpleResponseGeneratorBuilder.Dsl]
          *  - [MultiErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any, R : Any> :
@@ -427,7 +435,7 @@ class SimpleResponseGeneratorBuilders<T : Any> {
             SimpleResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl<T>().apply(initBlock)
         )
 
-    fun <R : Any> asCompositeOf(
+    fun <R : Any> asContainerOf(
         initBlock: InitBlock<MultiErrorResponseGeneratorDsl<T, R>>
     ): SimpleResponseGenerator<T> =
         SimpleResponseGeneratorBuilder.buildFrom(
@@ -435,13 +443,13 @@ class SimpleResponseGeneratorBuilders<T : Any> {
         )
 
     /**
-     * Delegate of [asCompositeOf]. May be more readable in some situations.
+     * Delegate of [asContainerOf]. May be more readable in some situations.
      */
     @Suppress("UNUSED_PARAMETER")
-    fun <R : Any> asCompositeOfErrorsOfType(
+    fun <R : Any> asContainerOfFaultsOfType(
         faultObjectsType: KClass<T>,
         initBlock: InitBlock<MultiErrorResponseGeneratorDsl<T, R>>
-    ) = asCompositeOf(initBlock)
+    ) = asContainerOf(initBlock)
 }
 
 /**
