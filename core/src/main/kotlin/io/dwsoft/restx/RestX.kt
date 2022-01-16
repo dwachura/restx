@@ -41,6 +41,7 @@ object RestX {
     /**
      * Delegate of [generatorFor].
      */
+    @Suppress("UNUSED_PARAMETER")
     fun <T : Any> generatorForFaultsOfType(
         faultObjectsType: KClass<T>,
         factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
