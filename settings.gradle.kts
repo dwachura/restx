@@ -5,4 +5,8 @@ gradle.rootProject {
     version = "0.1.0-SNAPSHOT"
 }
 
-include("core", "core:samples")
+include(
+    "core",
+    "core:samples",
+    "spring-5"
+)
