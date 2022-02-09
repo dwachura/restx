@@ -5,4 +5,4 @@ gradle.rootProject {
     version = "0.1.0-SNAPSHOT"
 }
 
-include("core")
+include("core", "core:samples")

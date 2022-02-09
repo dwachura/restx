@@ -2,32 +2,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
-    `maven-publish`
+    `maven-publish` apply false
 }
 
 group = "${parent!!.group}"
 version = rootProject.version
 
-val artifactName = "${rootProject.name}-${project.name}"
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            artifactId = artifactName
-            from(components["java"])
-        }
-    }
-}
-
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-dependencies {
-    logging()
-    kotest()
-    mockk()
 }
 
 tasks.withType<KotlinCompile> {
@@ -36,10 +19,36 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-tasks.jar {
-    archiveBaseName.set(artifactName)
+dependencies {
+    logging()
 }
 
-tasks.test {
-    useJUnitPlatform()
+findProperty("restx.testing.disabled") ?: run {
+    dependencies {
+        kotest()
+        mockk()
+    }
+
+    tasks.test {
+        useJUnitPlatform()
+    }
+}
+
+findProperty("restx.maven.publishing.disabled") ?: run {
+    apply { plugin("org.gradle.maven-publish") }
+
+    val artifactName = "${rootProject.name}-${project.name}"
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                artifactId = artifactName
+                from(components["java"])
+            }
+        }
+    }
+
+    tasks.jar {
+        archiveBaseName.set(artifactName)
+    }
 }

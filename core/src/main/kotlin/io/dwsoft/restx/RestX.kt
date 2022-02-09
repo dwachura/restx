@@ -13,14 +13,14 @@ object RestX {
     /**
      * Entry method to fluently configure [SimpleResponseGenerator]s.
      *
-     * @throws RestXConfigurationFailure in case of any errors during creation of a generator
+     * @throws RestXConfigurationException in case of any errors during creation of a generator
      */
     fun <T : Any> respondTo(
         factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
     ) = buildGenerator { factoryBlock.invoke(SimpleResponseGeneratorBuilders()) }
 
     private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
-        runCatching(buildFunction).onFailure { RestXConfigurationFailure(it) }.getOrThrow()
+        runCatching(buildFunction).onFailure { RestXConfigurationException(it) }.getOrThrow()
 
     /**
      * Delegate of [respondTo]. May be more readable in some situations.
@@ -50,7 +50,7 @@ object RestX {
     /**
      * Entry method to fluently configure [CompositeResponseGenerator]s.
      *
-     * @throws RestXConfigurationFailure in case of any errors during creation of a generator
+     * @throws RestXConfigurationException in case of any errors during creation of a generator
      */
     fun compose(initBlock: InitBlock<CompositeResponseGeneratorDsl>) = buildGenerator {
         CompositeResponseGeneratorBuilder.Dsl()
@@ -59,7 +59,7 @@ object RestX {
     }
 }
 
-class RestXConfigurationFailure(cause: Throwable) : RestXException("RestX configuration failed", cause)
+class RestXConfigurationException(cause: Throwable) : RestXException("RestX configuration failed", cause)
 
 /**
  * Base class for exceptions thrown by RestX library components

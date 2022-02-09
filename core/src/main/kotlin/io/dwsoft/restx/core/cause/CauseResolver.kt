@@ -11,7 +11,7 @@ import kotlin.reflect.full.superclasses
  *
  * @param T type of fault objects that resolvers of this class supports
  *
- * @throws CauseResolvingFailure in case of errors during resolving
+ * @throws CauseResolvingException in case of errors during resolving
  */
 fun interface CauseResolver<T : Any> {
     fun causeOf(fault: T): Cause<T>
@@ -59,4 +59,4 @@ fun interface CauseResolver<T : Any> {
 }
 operator fun <T : Any> CauseResolver<T>.invoke(fault: T) = causeOf(fault)
 
-class CauseResolvingFailure(message: String) : RestXException(message)
+class CauseResolvingException(message: String) : RestXException(message)

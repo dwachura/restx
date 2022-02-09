@@ -56,8 +56,7 @@ fun interface ResponseStatusProvider {
  * Implementation of [ResponseGenerator] that supports defining different strategies of handling faults yet still
  * preserves 'single entry' characteristic (in other words - typical application of composite pattern).
  */
-class CompositeResponseGenerator(private val registry: ResponseGeneratorRegistry)
-    : ResponseGenerator<Any> {
+class CompositeResponseGenerator(private val registry: ResponseGeneratorRegistry) : ResponseGenerator<Any> {
     private val log = initLog()
 
     /**
