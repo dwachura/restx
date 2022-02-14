@@ -1,5 +1,6 @@
 package io.dwsoft.restx.core.payload
 
+import io.dwsoft.restx.core.payload.RequestDataError.Source
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.string.shouldContain
@@ -12,7 +13,7 @@ class RequestDataErrorSourceTests : FreeSpec({
             "\t \n \r" to "\\t \\n \\r"
         ).forEach { (invalidValue, description) ->
             "invalid location: '$invalidValue' ($description)" - {
-                shouldThrow<IllegalArgumentException> { Source.queryParam(invalidValue) }
+                shouldThrow<IllegalArgumentException> { Source.query(invalidValue) }
                     .message shouldContain "Invalid data source location must be set"
             }
         }

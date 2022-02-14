@@ -18,7 +18,6 @@ internal object Logging {
             ?.let { it::class.qualifiedName }?.toLogger()
             ?: T::class.initLog()
 
-
     private fun String.toLogger(): KLogger {
         return KotlinLogging.logger(this)
     }
@@ -29,7 +28,6 @@ internal object Logging {
     inline fun <reified T : KClass<*>> T.initLog(): KLogger =
         this.qualifiedName?.toLogger()
             ?: throw IllegalArgumentException("logger id must not be null")
-
 }
 
 internal object Collections {

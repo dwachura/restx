@@ -7,7 +7,8 @@ import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
-import io.dwsoft.restx.core.payload.Source
+import io.dwsoft.restx.core.payload.RequestDataError.Source
+import io.dwsoft.restx.core.payload.asMessage
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -42,7 +43,7 @@ abstract class StandardCauseProcessorTestsBase(
             dummy()
         )
 
-        shouldThrow<CauseProcessingFailure> { sut.process(Any().causeId("")) }
+        shouldThrow<CauseProcessingException> { sut.process(Any().causeId("")) }
     }
 
     test("exception is thrown in case of message resolver failure") {
@@ -51,7 +52,7 @@ abstract class StandardCauseProcessorTestsBase(
             mock { every { messageFor(any()) } throws RuntimeException() }
         )
 
-        shouldThrow<CauseProcessingFailure> { sut.process(Any().causeId("")) }
+        shouldThrow<CauseProcessingException> { sut.process(Any().causeId("")) }
     }
 
     this.apply(additionalTestsInitBlock)
@@ -63,7 +64,7 @@ class OperationErrorProcessorTests : StandardCauseProcessorTestsBase(
         test("payload with defined data is returned") {
             val fault = Any().causeId("")
             val code = "code"
-            val message = "message"
+            val message = "message".asMessage()
 
             val payload = OperationErrorProcessor<Any>({ code }, { message }).process(fault)
 
@@ -88,8 +89,8 @@ class RequestDataErrorProcessorTests : StandardCauseProcessorTestsBase(
         test("payload with defined data is returned") {
             val fault = Any().causeId("")
             val code = "code"
-            val message = "message"
-            val source = Source.queryParam("query")
+            val message = "message".asMessage()
+            val source = Source.query("query")
 
             val payload = RequestDataErrorProcessor<Any>({ code }, { message }, { source }).process(fault)
 
@@ -100,7 +101,7 @@ class RequestDataErrorProcessorTests : StandardCauseProcessorTestsBase(
             val failingDataErrorSourceProvider =
                 mock<DataErrorSourceResolver<Any>> { every { sourceOf(any()) } throws RuntimeException() }
 
-            shouldThrow<CauseProcessingFailure> {
+            shouldThrow<CauseProcessingException> {
                 RequestDataErrorProcessor(dummy(), dummy(), failingDataErrorSourceProvider)
                     .process(Any().causeId(""))
             }

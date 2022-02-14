@@ -54,9 +54,9 @@ sealed interface SingleErrorPayloadGeneratorDsl<T : Any> {
     fun withMessage(factoryBlock: MessageResolverFactoryBlock<T>): SingleErrorPayloadGeneratorDsl<T>
 
     /**
-     * Overloaded version of [withMessage] returning [fixed resolver][MessageResolver.fixed].
+     * Overloaded version of [withMessage] returning [plain text resolver][MessageResolver.fromText].
      */
-    fun withMessage(message: String) = withMessage { fixed(message) }
+    fun withMessage(message: String) = withMessage { fromText(message) }
 
     /**
      * Default implementation of [SingleErrorPayloadGeneratorDsl].
@@ -474,7 +474,7 @@ sealed interface TypeBasedResponseGeneratorRegistryDsl {
 typealias ResponseGeneratorFactoryBlock<T> = FactoryBlock<RestX, ResponseGenerator<T>>
 
 /**
- * Overloaded, inline version of [map].
+ * Overloaded, inline version of [TypeBasedResponseGeneratorRegistryDsl.map].
  */
 inline fun <reified T : Any> TypeBasedResponseGeneratorRegistryDsl.register(
     generatorFactoryBlock: ResponseGeneratorFactoryBlock<T>

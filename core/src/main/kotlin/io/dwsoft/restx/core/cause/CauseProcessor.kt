@@ -6,8 +6,8 @@ import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.message.MessageResolver
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
+import io.dwsoft.restx.core.payload.RequestDataError.Source
 import io.dwsoft.restx.core.payload.SingleErrorPayload
-import io.dwsoft.restx.core.payload.Source
 
 /**
  * Interface for processors of [Cause] that convert them into [SingleErrorPayload] objects.
@@ -18,12 +18,12 @@ fun interface CauseProcessor<T : Any> {
     /**
      * Method responsible for converting [Cause] into corresponding [SingleErrorPayload].
      *
-     * @throws CauseProcessingFailure in case of processing failure
+     * @throws CauseProcessingException in case of processing failure
      */
     fun process(cause: Cause<T>): SingleErrorPayload
 }
 
-class CauseProcessingFailure(throwable: Throwable) : RestXException(throwable)
+class CauseProcessingException(throwable: Throwable) : RestXException(throwable)
 
 /**
  * RestX's standard implementation of payload's [code][SingleErrorPayload.code]
@@ -38,10 +38,7 @@ private fun <T : Any> createStandardCodeAndMessageResolver(
             codeResolver.codeFor(cause),
             messageResolver.messageFor(cause)
         )
-    }.fold(
-        onSuccess = { it },
-        onFailure = { throw CauseProcessingFailure(it) }
-    )
+    }.fold(onSuccess = { it }, onFailure = { throw CauseProcessingException(it) })
 }
 
 /**
@@ -52,8 +49,7 @@ class OperationErrorProcessor<T : Any>(
     messageResolver: MessageResolver<T>
 ) : CauseProcessor<T> {
     private val log = initLog()
-    private val codeAndMessageOf =
-        createStandardCodeAndMessageResolver(codeResolver, messageResolver)
+    private val codeAndMessageOf = createStandardCodeAndMessageResolver(codeResolver, messageResolver)
 
     override fun process(cause: Cause<T>): OperationError {
         log.info { "Processing cause $cause" }
@@ -71,18 +67,13 @@ class RequestDataErrorProcessor<T : Any>(
     private val dataErrorSourceResolver: DataErrorSourceResolver<T>
 ) : CauseProcessor<T> {
     private val log = initLog()
-    private val codeAndMessageOf =
-        createStandardCodeAndMessageResolver(codeResolver, messageResolver)
+    private val codeAndMessageOf = createStandardCodeAndMessageResolver(codeResolver, messageResolver)
 
     override fun process(cause: Cause<T>): RequestDataError {
         log.info { "Processing cause $cause" }
         val (code, message) = codeAndMessageOf(cause)
-        val source = runCatching {
-            dataErrorSourceResolver.sourceOf(cause)
-        }.fold(
-            onSuccess = { it },
-            onFailure = { throw CauseProcessingFailure(it) }
-        )
+        val source = runCatching { dataErrorSourceResolver.sourceOf(cause) }
+            .fold(onSuccess = { it }, onFailure = { throw CauseProcessingException(it) })
         return RequestDataError(code, message, source)
     }
 }

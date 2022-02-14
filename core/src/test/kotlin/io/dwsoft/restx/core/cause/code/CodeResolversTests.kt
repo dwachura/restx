@@ -44,7 +44,7 @@ class MapBasedCodeResolverTests : FunSpec({
     test("exception is thrown when code is not defined for given fault id") {
         val unmappedId = "unmapped-id"
 
-        shouldThrow<CodeResolvingFailure> {
+        shouldThrow<CodeResolvingException> {
             MapBasedCodeResolver(mapOf("fault-id" to "code"))
                 .codeFor(Any().causeId(unmappedId))
         }.message should containInOrder("None code mapping found for id", unmappedId)
