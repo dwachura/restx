@@ -9,7 +9,7 @@ fun main() {
     class InvalidParamException(val type: Source.Type, val location: String, message: String)
         : RuntimeException(message)
 
-    val generator = RestX.respondTo<InvalidParamException> { asRequestDataError {
+    val generator = RestX.treat<InvalidParamException> { asRequestDataError {
         identifiedBy("INVALID_PARAM")
         withMessage { generatedAs { Message(context.localizedMessage) } }
         pointingInvalidValue { resolvedBy { cause ->

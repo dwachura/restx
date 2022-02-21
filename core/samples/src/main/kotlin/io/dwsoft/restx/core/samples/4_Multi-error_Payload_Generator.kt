@@ -5,7 +5,7 @@ import io.dwsoft.restx.core.payload.Message
 import io.dwsoft.restx.core.cause.message.generatedAs
 
 fun main() {
-    val generator = RestX.respondTo<List<Exception>> { asContainerOf<Exception> {
+    val generator = RestX.treat<List<Exception>> { asContainerOf<Exception> {
         extractedAs { it }
         eachRepresenting { operationError {
             withMessage { generatedAs { Message(context.localizedMessage) } }

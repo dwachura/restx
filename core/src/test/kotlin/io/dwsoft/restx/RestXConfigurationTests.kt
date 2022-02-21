@@ -18,7 +18,7 @@ import io.mockk.verify
 
 class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with code the same as object type is created") {
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             withMessage { dummy() }
             withStatus { dummy() }
         } }
@@ -30,7 +30,7 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with fixed code is created") {
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             withCode(expectedCode)
             withMessage { dummy() }
             withStatus { dummy() }
@@ -43,7 +43,7 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with custom generated code is created") {
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             withCode { generatedAs { expectedCode } }
             withMessage { dummy() }
             withStatus { dummy() }
@@ -57,7 +57,7 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with map-based code is created") {
         val causeId = "id"
         val expectedCode = "code"
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             identifiedBy(causeId)
             withCode { mapBased(causeId to expectedCode) }
             withMessage { dummy() }
@@ -71,7 +71,7 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with fixed message is created") {
         val expectedMessage = "message"
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             withMessage(expectedMessage)
             withStatus { dummy() }
         } }
@@ -83,7 +83,7 @@ class RestXConfigurationTests : FunSpec({
 
     test("generator of single error payloads with custom generated message is created") {
         val faultResult = RuntimeException("message")
-        val generator = RestX.respondTo<Exception> { asOperationError {
+        val generator = RestX.treat<Exception> { asOperationError {
             withMessage { generatedAs { context.message!!.asMessage() } }
             withStatus { dummy() }
         } }
@@ -96,7 +96,7 @@ class RestXConfigurationTests : FunSpec({
 
     test("single error payload with defined status is created") {
         val status = 500
-        val generator = RestX.respondTo<Any> { asOperationError {
+        val generator = RestX.treat<Any> { asOperationError {
             withMessage { dummy() }
             withStatus(status)
         } }
@@ -109,7 +109,7 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads for invalid request data errors is created") {
         class InvalidInput(val type: Source.Type, val location: String)
         val expectedSource = Source.query("queryParam1")
-        val generator = RestX.respondTo<InvalidInput> { asRequestDataError {
+        val generator = RestX.treat<InvalidInput> { asRequestDataError {
             withMessage { generatedAs { dummy() } }
             pointingInvalidValue { resolvedBy { cause -> cause.context.let { it.type.toSource(it.location) } } }
             withStatus { dummy() }
@@ -132,7 +132,7 @@ class RestXConfigurationTests : FunSpec({
             NumberFormatException("Wrong number")
         )
         val fault = MultiExceptionFaultResult(*exceptions.toTypedArray())
-        val generator = RestX.respondTo<MultiExceptionFaultResult> { asContainerOf<Exception> {
+        val generator = RestX.treat<MultiExceptionFaultResult> { asContainerOf<Exception> {
             extractedAs { it.errors.asList() }
             eachRepresenting { operationError {
                 withMessage { generatedAs { context.message!!.asMessage() } }

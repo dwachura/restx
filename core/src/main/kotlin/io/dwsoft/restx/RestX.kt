@@ -15,28 +15,31 @@ object RestX {
      *
      * @throws RestXConfigurationException in case of any errors during creation of a generator
      */
-    fun <T : Any> respondTo(
+    fun <T : Any> treat(
         factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
     ) = buildGenerator { factoryBlock.invoke(SimpleResponseGeneratorBuilders()) }
 
     private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
-        runCatching(buildFunction).onFailure { RestXConfigurationException(it) }.getOrThrow()
+        runCatching(buildFunction).fold(
+            onSuccess = { it },
+            onFailure = { throw RestXConfigurationException(it) }
+        )
 
     /**
-     * Delegate of [respondTo]. May be more readable in some situations.
+     * Delegate of [treat]. May be more readable in some situations.
      */
     @Suppress("UNUSED_PARAMETER")
     fun <T : Any> respondToFaultOfType(
         faultObjectsType: KClass<T>,
         factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
-    ) = respondTo(factoryBlock)
+    ) = treat(factoryBlock)
 
     /**
-     * Delegate of [respondTo].
+     * Delegate of [treat].
      */
     fun <T : Any> generatorFor(
         factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
-    ) = respondTo(factoryBlock)
+    ) = treat(factoryBlock)
 
     /**
      * Delegate of [generatorFor].

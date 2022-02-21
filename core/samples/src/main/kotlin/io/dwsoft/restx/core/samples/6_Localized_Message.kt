@@ -8,7 +8,7 @@ import io.dwsoft.restx.core.payload.SingleErrorPayload
 import java.util.Locale
 
 fun main() {
-    val generator = RestX.respondTo<Exception> { asOperationError {
+    val generator = RestX.treat<Exception> { asOperationError {
         withMessage { generatedAs {
             Message("Default error message")
                 .withDefaultTranslator { _, locale ->

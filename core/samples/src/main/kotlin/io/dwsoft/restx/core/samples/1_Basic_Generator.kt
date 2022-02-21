@@ -5,7 +5,7 @@ import io.dwsoft.restx.core.cause.message.generatedAs
 import io.dwsoft.restx.core.payload.Message
 
 fun main() {
-    val generator = RestX.respondTo<Exception> { asOperationError {
+    val generator = RestX.treat<Exception> { asOperationError {
         identifiedBy { type() } // identify faults by its type - could be omitted, as it's a default behavior
         withCode { sameAsCauseId() } // generate payloads with code same as fault's identifier - could be omitted, as it's a default behavior
         withMessage { generatedAs { Message(context.localizedMessage) } } // generate payloads with exception message

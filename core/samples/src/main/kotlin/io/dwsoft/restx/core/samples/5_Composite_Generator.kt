@@ -4,7 +4,7 @@ import io.dwsoft.restx.RestX
 import io.dwsoft.restx.register
 
 fun main() {
-    val predefinedGenerator = RestX.respondTo<IllegalStateException> { asOperationError {
+    val predefinedGenerator = RestX.treat<IllegalStateException> { asOperationError {
         withCode("ILLEGAL_STATE") // generate payloads with fixed code...
         withMessage("Illegal state exception") // ...and fixed message as well
         withStatus(500) // HTTP status of a response

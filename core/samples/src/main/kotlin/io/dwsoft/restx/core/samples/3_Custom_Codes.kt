@@ -5,7 +5,7 @@ import java.io.IOException
 import io.dwsoft.restx.core.cause.code.mapBased
 
 fun main() {
-    val generator = RestX.respondTo<Exception> { asOperationError {
+    val generator = RestX.treat<Exception> { asOperationError {
         withCode { mapBased( // codes will be taken from defined map - key == fault id (type name, as defined above)
             Exception::class.qualifiedName!! to "GENERIC_FAILURE",
             RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
