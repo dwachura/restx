@@ -171,22 +171,22 @@ class MultipleErrorPayloadGeneratorBuilderTests : FunSpec({
 private typealias AnySingleErrorPayloadGeneratorFactoryBlock =
         SingleErrorPayloadGeneratorFactoryBlock<Any>
 
-class SimpleResponseGeneratorBuilderTests : FreeSpec({
+class BasicResponseGeneratorBuilderTests : FreeSpec({
     "configuration without status provider factory throws exception" - {
         listOf(
             Tuple2("OperationError response generator") {
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl()
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl()
                 )
             },
             Tuple2("RequestDataError response generator") {
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl()
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl()
                 )
             },
             Tuple2("multi-error response generator") {
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl()
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl()
                 )
             },
         ).forEach { (generatorType, callBuilder) ->
@@ -204,8 +204,8 @@ class SimpleResponseGeneratorBuilderTests : FreeSpec({
                 mock<ResponseStatusProviderFactoryBlock> { every { this@mock(any()) } returns dummy() }
             ){
                     statusProviderFactoryMock: ResponseStatusProviderFactoryBlock ->
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl<Any>().apply {
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl<Any>().apply {
                         withMessage { dummy() }
                         withStatus(statusProviderFactoryMock)
                     }
@@ -216,8 +216,8 @@ class SimpleResponseGeneratorBuilderTests : FreeSpec({
                 mock { every { this@mock(any()) } returns dummy() }
             ){
                     statusProviderFactoryMock: ResponseStatusProviderFactoryBlock ->
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl<Any>().apply {
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl<Any>().apply {
                         withMessage { dummy() }
                         pointingInvalidValue { dummy() }
                         withStatus(statusProviderFactoryMock)
@@ -229,8 +229,8 @@ class SimpleResponseGeneratorBuilderTests : FreeSpec({
                 mock { every { this@mock(any()) } returns dummy() }
             ){
                     statusProviderFactoryMock: ResponseStatusProviderFactoryBlock ->
-                SimpleResponseGeneratorBuilder.buildFrom(
-                    SimpleResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl<Any, Any>().apply {
+                BasicResponseGeneratorBuilder.buildFrom(
+                    BasicResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl<Any, Any>().apply {
                         extractedAs(dummy())
                         eachHandledBy(dummy())
                         withStatus(statusProviderFactoryMock)

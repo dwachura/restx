@@ -2,14 +2,14 @@ package io.dwsoft.restx
 
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.DataErrorSourceResolver
-import io.dwsoft.restx.core.cause.OperationErrorProcessor
-import io.dwsoft.restx.core.cause.RequestDataErrorProcessor
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.message.MessageResolver
 import io.dwsoft.restx.core.payload.ErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.OperationError
+import io.dwsoft.restx.core.payload.OperationErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.RequestDataError
+import io.dwsoft.restx.core.payload.RequestDataErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.SingleErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.SubErrorExtractor
 import io.dwsoft.restx.core.response.CompositeResponseGenerator
@@ -17,7 +17,7 @@ import io.dwsoft.restx.core.response.HttpStatus
 import io.dwsoft.restx.core.response.ResponseGenerator
 import io.dwsoft.restx.core.response.ResponseGeneratorRegistry
 import io.dwsoft.restx.core.response.ResponseStatusProvider
-import io.dwsoft.restx.core.response.SimpleResponseGenerator
+import io.dwsoft.restx.core.response.BasicResponseGenerator
 import io.dwsoft.restx.core.response.TypeBasedResponseGeneratorRegistry
 import kotlin.reflect.KClass
 
@@ -103,12 +103,10 @@ object OperationErrorPayloadGeneratorBuilder {
         val messageResolverFactoryBlock =
             config.messageResolverFactoryBlock
                 ?: throw IllegalArgumentException("Message resolver factory block not set")
-        return SingleErrorPayloadGenerator(
+        return OperationErrorPayloadGenerator(
             config.causeResolverFactoryBlock(CauseResolver.Factories),
-            OperationErrorProcessor(
-                config.codeResolverFactoryBlock(CodeResolver.Factories),
-                messageResolverFactoryBlock(MessageResolver.Factories)
-            )
+            config.codeResolverFactoryBlock(CodeResolver.Factories),
+            messageResolverFactoryBlock(MessageResolver.Factories)
         )
     }
 
@@ -147,13 +145,11 @@ object RequestDataErrorPayloadGeneratorBuilder {
         val dataErrorSourceResolverFactoryBlock =
             config.dataErrorSourceResolverFactoryBlock
                 ?: throw IllegalArgumentException("Data error source resolver factory block not set")
-        return SingleErrorPayloadGenerator(
+        return RequestDataErrorPayloadGenerator(
             config.causeResolverFactoryBlock(CauseResolver.Factories),
-            RequestDataErrorProcessor(
-                config.codeResolverFactoryBlock(CodeResolver.Factories),
-                messageResolverFactoryBlock(MessageResolver.Factories),
-                dataErrorSourceResolverFactoryBlock(DataErrorSourceResolver.Factories)
-            )
+            config.codeResolverFactoryBlock(CodeResolver.Factories),
+            messageResolverFactoryBlock(MessageResolver.Factories),
+            dataErrorSourceResolverFactoryBlock(DataErrorSourceResolver.Factories)
         )
     }
 
@@ -275,15 +271,15 @@ class ErrorPayloadGeneratorBuilders<T : Any> : SingleErrorPayloadGeneratorBuilde
 }
 
 /**
- * Configuration DSL for [SimpleResponseGenerator]s.
+ * Configuration DSL for [BasicResponseGenerator]s.
  */
-sealed interface SimpleResponseGeneratorDsl<T : Any> {
+sealed interface BasicResponseGeneratorDsl<T : Any> {
     val responseStatusProviderFactoryBlock: ResponseStatusProviderFactoryBlock?
 
     /**
      * Opens configuration block of [ResponseStatusProvider].
      */
-    fun withStatus(factoryBlock: ResponseStatusProviderFactoryBlock): SimpleResponseGeneratorDsl<T>
+    fun withStatus(factoryBlock: ResponseStatusProviderFactoryBlock): BasicResponseGeneratorDsl<T>
 
     /**
      * Overloaded version of [withStatus] taking [number][status] to create provider
@@ -295,68 +291,68 @@ sealed interface SimpleResponseGeneratorDsl<T : Any> {
 typealias ResponseStatusProviderFactoryBlock = FactoryBlock<ResponseStatusProvider.Factories, ResponseStatusProvider>
 
 /**
- * Configuration DSL serving as a point of DSL's extension, common for [SimpleResponseGenerator]s, which produce
+ * Configuration DSL serving as a point of DSL's extension, common for [BasicResponseGenerator]s, which produce
  * responses containing single error payloads.
  */
 sealed interface SingleErrorResponseGeneratorDsl<T : Any> :
-    SimpleResponseGeneratorDsl<T>,
+    BasicResponseGeneratorDsl<T>,
     SingleErrorPayloadGeneratorDsl<T>
 
 /**
- * Configuration DSL for [SimpleResponseGenerator]s, which produce responses for [OperationError].
+ * Configuration DSL for [BasicResponseGenerator]s, which produce responses for [OperationError].
  */
 sealed interface OperationErrorResponseGeneratorDsl<T : Any> :
     SingleErrorResponseGeneratorDsl<T>,
     OperationErrorPayloadGeneratorDsl<T>
 
 /**
- * Configuration DSL for [SimpleResponseGenerator]s, which produce responses for [RequestDataError].
+ * Configuration DSL for [BasicResponseGenerator]s, which produce responses for [RequestDataError].
  */
 sealed interface RequestDataErrorResponseGeneratorDsl<T : Any> :
     SingleErrorResponseGeneratorDsl<T>,
     RequestDataErrorPayloadGeneratorDsl<T>
 
 /**
- * Configuration DSL for [SimpleResponseGenerator]s, which produce responses with
+ * Configuration DSL for [BasicResponseGenerator]s, which produce responses with
  * [multi-errors payloads][MultiErrorPayloadGenerator].
  */
 sealed interface MultiErrorResponseGeneratorDsl<T : Any, R : Any> :
-    SimpleResponseGeneratorDsl<T>,
+    BasicResponseGeneratorDsl<T>,
     MultiErrorPayloadGeneratorDsl<T, R>
 
-object SimpleResponseGeneratorBuilder {
-    fun <T : Any> buildFrom(config: OperationErrorResponseGeneratorDsl<T>): SimpleResponseGenerator<T> {
+object BasicResponseGeneratorBuilder {
+    fun <T : Any> buildFrom(config: OperationErrorResponseGeneratorDsl<T>): BasicResponseGenerator<T> {
         val responseStatusProviderFactoryBlock = getStatusProviderFactory(config)
-        return SimpleResponseGenerator(
+        return BasicResponseGenerator(
             OperationErrorPayloadGeneratorBuilder.buildFrom(config),
             responseStatusProviderFactoryBlock(ResponseStatusProvider.Factories)
         )
     }
 
-    private fun <T : Any> getStatusProviderFactory(config: SimpleResponseGeneratorDsl<T>) =
+    private fun <T : Any> getStatusProviderFactory(config: BasicResponseGeneratorDsl<T>) =
         config.responseStatusProviderFactoryBlock
             ?: throw IllegalArgumentException("Status provider factory block not set")
 
-    fun <T : Any> buildFrom(config: RequestDataErrorResponseGeneratorDsl<T>): SimpleResponseGenerator<T> {
+    fun <T : Any> buildFrom(config: RequestDataErrorResponseGeneratorDsl<T>): BasicResponseGenerator<T> {
         val responseStatusProviderFactoryBlock = getStatusProviderFactory(config)
-        return SimpleResponseGenerator(
+        return BasicResponseGenerator(
             RequestDataErrorPayloadGeneratorBuilder.buildFrom(config),
             responseStatusProviderFactoryBlock(ResponseStatusProvider.Factories)
         )
     }
 
-    fun <T : Any, R : Any> buildFrom(config: MultiErrorResponseGeneratorDsl<T, R>): SimpleResponseGenerator<T> {
+    fun <T : Any, R : Any> buildFrom(config: MultiErrorResponseGeneratorDsl<T, R>): BasicResponseGenerator<T> {
         val responseStatusProviderFactoryBlock = getStatusProviderFactory(config)
-        return SimpleResponseGenerator(
+        return BasicResponseGenerator(
             MultiErrorPayloadGeneratorBuilder.buildFrom(config),
             responseStatusProviderFactoryBlock(ResponseStatusProvider.Factories)
         )
     }
 
     /**
-     * Default implementation of [SimpleResponseGeneratorDsl].
+     * Default implementation of [BasicResponseGeneratorDsl].
      */
-    class Dsl<T : Any> : SimpleResponseGeneratorDsl<T> {
+    class Dsl<T : Any> : BasicResponseGeneratorDsl<T> {
         override var responseStatusProviderFactoryBlock: ResponseStatusProviderFactoryBlock? = null
             private set
 
@@ -374,12 +370,12 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [OperationErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorBuilder.Dsl]
+         *  - [BasicResponseGeneratorBuilder.Dsl]
          *  - [OperationErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any> :
             OperationErrorResponseGeneratorDsl<T>,
-            SimpleResponseGeneratorDsl<T> by SimpleResponseGeneratorBuilder.Dsl(),
+            BasicResponseGeneratorDsl<T> by BasicResponseGeneratorBuilder.Dsl(),
             OperationErrorPayloadGeneratorDsl<T> by OperationErrorPayloadGeneratorBuilder.Dsl()
     }
 
@@ -392,12 +388,12 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [RequestDataErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorBuilder.Dsl]
+         *  - [BasicResponseGeneratorBuilder.Dsl]
          *  - [RequestDataErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any> :
             RequestDataErrorResponseGeneratorDsl<T>,
-            SimpleResponseGeneratorDsl<T> by SimpleResponseGeneratorBuilder.Dsl(),
+            BasicResponseGeneratorDsl<T> by BasicResponseGeneratorBuilder.Dsl(),
             RequestDataErrorPayloadGeneratorDsl<T> by RequestDataErrorPayloadGeneratorBuilder.Dsl()
     }
 
@@ -410,36 +406,36 @@ object SimpleResponseGeneratorBuilder {
          * Default implementation of [MultiErrorResponseGeneratorDsl].
          *
          * Delegates to:
-         *  - [SimpleResponseGeneratorBuilder.Dsl]
+         *  - [BasicResponseGeneratorBuilder.Dsl]
          *  - [MultiErrorPayloadGeneratorBuilder.Dsl]
          */
         class Dsl<T : Any, R : Any> :
             MultiErrorResponseGeneratorDsl<T, R>,
-            SimpleResponseGeneratorDsl<T> by SimpleResponseGeneratorBuilder.Dsl(),
+            BasicResponseGeneratorDsl<T> by BasicResponseGeneratorBuilder.Dsl(),
             MultiErrorPayloadGeneratorDsl<T, R> by MultiErrorPayloadGeneratorBuilder.Dsl()
     }
 }
 
-class SimpleResponseGeneratorBuilders<T : Any> {
+class BasicResponseGeneratorBuilders<T : Any> {
     fun asOperationError(
         initBlock: InitBlock<OperationErrorResponseGeneratorDsl<T>>
-    ): SimpleResponseGenerator<T> =
-        SimpleResponseGeneratorBuilder.buildFrom(
-            SimpleResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl<T>().apply(initBlock)
+    ): BasicResponseGenerator<T> =
+        BasicResponseGeneratorBuilder.buildFrom(
+            BasicResponseGeneratorBuilder.OperationErrorResponseGenerator.dsl<T>().apply(initBlock)
         )
 
     fun asRequestDataError(
         initBlock: InitBlock<RequestDataErrorResponseGeneratorDsl<T>>
-    ): SimpleResponseGenerator<T> =
-        SimpleResponseGeneratorBuilder.buildFrom(
-            SimpleResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl<T>().apply(initBlock)
+    ): BasicResponseGenerator<T> =
+        BasicResponseGeneratorBuilder.buildFrom(
+            BasicResponseGeneratorBuilder.RequestDataErrorResponseGenerator.dsl<T>().apply(initBlock)
         )
 
     fun <R : Any> asContainerOf(
         initBlock: InitBlock<MultiErrorResponseGeneratorDsl<T, R>>
-    ): SimpleResponseGenerator<T> =
-        SimpleResponseGeneratorBuilder.buildFrom(
-            SimpleResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl<T, R>().apply(initBlock)
+    ): BasicResponseGenerator<T> =
+        BasicResponseGeneratorBuilder.buildFrom(
+            BasicResponseGeneratorBuilder.MultiErrorResponseGenerator.dsl<T, R>().apply(initBlock)
         )
 
     /**

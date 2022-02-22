@@ -3,7 +3,7 @@ package io.dwsoft.restx
 import io.dwsoft.restx.core.Reflection
 import io.dwsoft.restx.core.response.CompositeResponseGenerator
 import io.dwsoft.restx.core.response.ResponseGenerator
-import io.dwsoft.restx.core.response.SimpleResponseGenerator
+import io.dwsoft.restx.core.response.BasicResponseGenerator
 import kotlin.reflect.KClass
 
 /**
@@ -11,13 +11,13 @@ import kotlin.reflect.KClass
  */
 object RestX {
     /**
-     * Entry method to fluently configure [SimpleResponseGenerator]s.
+     * Entry method to fluently configure [BasicResponseGenerator]s.
      *
      * @throws RestXConfigurationException in case of any errors during creation of a generator
      */
     fun <T : Any> treat(
-        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
-    ) = buildGenerator { factoryBlock.invoke(SimpleResponseGeneratorBuilders()) }
+        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
+    ) = buildGenerator { factoryBlock.invoke(BasicResponseGeneratorBuilders()) }
 
     private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
         runCatching(buildFunction).fold(
@@ -31,14 +31,14 @@ object RestX {
     @Suppress("UNUSED_PARAMETER")
     fun <T : Any> respondToFaultOfType(
         faultObjectsType: KClass<T>,
-        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
     ) = treat(factoryBlock)
 
     /**
      * Delegate of [treat].
      */
     fun <T : Any> generatorFor(
-        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
     ) = treat(factoryBlock)
 
     /**
@@ -47,7 +47,7 @@ object RestX {
     @Suppress("UNUSED_PARAMETER")
     fun <T : Any> generatorForFaultsOfType(
         faultObjectsType: KClass<T>,
-        factoryBlock: FactoryBlock<SimpleResponseGeneratorBuilders<T>, SimpleResponseGenerator<T>>
+        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
     ) = generatorFor(factoryBlock)
 
     /**
