@@ -1,9 +1,9 @@
 package io.dwsoft.restx
 
 import io.dwsoft.restx.core.Reflection
-import io.dwsoft.restx.core.response.CompositeResponseGenerator
+import io.dwsoft.restx.core.dsl.ResponseGenerators
 import io.dwsoft.restx.core.response.ResponseGenerator
-import io.dwsoft.restx.core.response.BasicResponseGenerator
+import io.dwsoft.restx.core.dsl.RestXConfigurationException
 import kotlin.reflect.KClass
 
 /**
@@ -11,58 +11,13 @@ import kotlin.reflect.KClass
  */
 object RestX {
     /**
-     * Entry method to fluently configure [BasicResponseGenerator]s.
+     * Entry method to fluently configure [ResponseGenerator]s.
      *
      * @throws RestXConfigurationException in case of any errors during creation of a generator
      */
-    fun <T : Any> treat(
-        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
-    ) = buildGenerator { factoryBlock.invoke(BasicResponseGeneratorBuilders()) }
-
-    private fun <R : ResponseGenerator<T>, T : Any> buildGenerator(buildFunction: () -> R) =
-        runCatching(buildFunction).fold(
-            onSuccess = { it },
-            onFailure = { throw RestXConfigurationException(it) }
-        )
-
-    /**
-     * Delegate of [treat]. May be more readable in some situations.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun <T : Any> respondToFaultOfType(
-        faultObjectsType: KClass<T>,
-        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
-    ) = treat(factoryBlock)
-
-    /**
-     * Delegate of [treat].
-     */
-    fun <T : Any> generatorFor(
-        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
-    ) = treat(factoryBlock)
-
-    /**
-     * Delegate of [generatorFor].
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun <T : Any> generatorForFaultsOfType(
-        faultObjectsType: KClass<T>,
-        factoryBlock: FactoryBlock<BasicResponseGeneratorBuilders<T>, BasicResponseGenerator<T>>
-    ) = generatorFor(factoryBlock)
-
-    /**
-     * Entry method to fluently configure [CompositeResponseGenerator]s.
-     *
-     * @throws RestXConfigurationException in case of any errors during creation of a generator
-     */
-    fun compose(initBlock: InitBlock<CompositeResponseGeneratorDsl>) = buildGenerator {
-        CompositeResponseGeneratorBuilder.Dsl()
-            .apply(initBlock)
-            .let { CompositeResponseGeneratorBuilder.buildFrom(it) }
-    }
+    fun <T : Any> config(factoryBlock: ResponseGenerators.() -> ResponseGenerator<T>) =
+        factoryBlock(ResponseGenerators())
 }
-
-class RestXConfigurationException(cause: Throwable) : RestXException("RestX configuration failed", cause)
 
 /**
  * Base class for exceptions thrown by RestX library components
