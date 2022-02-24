@@ -13,7 +13,7 @@ fun interface CodeResolver<in T : Any> {
     /**
      * Method returning code for given [Cause].
      *
-     * @throws CodeResolvingException in case code for given [id][Cause] cannot be resolved
+     * @throws CodeResolvingException in case code for given [key][Cause.key] cannot be resolved
      */
     fun codeFor(cause: Cause<T>): String
 }
@@ -31,9 +31,9 @@ class FixedCodeResolver(private val code: String) : CodeResolver<Any> {
 }
 
 /**
- * Implementation of [CodeResolver] returning code based on fault id from predefined map.
+ * Implementation of [CodeResolver] returning code based on fault key from predefined map.
  *
- * @param mapping <fault cause id>:<fault code> map
+ * @param mapping <fault cause key>:<fault code> map
  */
 class MapBasedCodeResolver(private val mapping: Map<String, String>) : CodeResolver<Any> {
     private val log = initLog()
@@ -43,8 +43,8 @@ class MapBasedCodeResolver(private val mapping: Map<String, String>) : CodeResol
     }
 
     override fun codeFor(cause: Cause<Any>): String {
-        return mapping[cause.id]
+        return mapping[cause.key]
             ?.also { log.info { "Found mapped code [$it] for $cause" } }
-            ?: throw CodeResolvingException("None code mapping found for id '${cause.id}'")
+            ?: throw CodeResolvingException("None code mapping found for key '${cause.key}'")
     }
 }

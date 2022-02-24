@@ -107,17 +107,17 @@ sealed interface SingleErrorPayloadGeneratorSpec<T : Any> {
 }
 
 /**
- * Overloaded version of [identifiedBy] returning [fixed resolver][CauseResolver.fixedId].
+ * Overloaded version of [identifiedBy] returning [fixed resolver][CauseResolvers.fixedKey].
  */
-fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.identifiedBy(fixedId: String) = identifiedBy { fixedId(fixedId) }
+fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.identifiedBy(key: String) = identifiedBy { fixedKey(key) }
 
 /**
- * Overloaded version of [withCode] returning [fixed resolver][CodeResolver.fixed].
+ * Overloaded version of [withCode] returning [fixed resolver][CodeResolvers.fixed].
  */
 fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.withCode(code: String) = withCode { fixed(code) }
 
 /**
- * Overloaded version of [withMessage] returning [plain text resolver][MessageResolver.fromText].
+ * Overloaded version of [withMessage] returning [plain text resolver][MessageResolvers.fromText].
  */
 fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.withMessage(message: String) = withMessage { fromText(message) }
 

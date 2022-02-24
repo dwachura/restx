@@ -4,7 +4,7 @@ import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.CauseResolvingException
 import io.dwsoft.restx.core.cause.DataErrorSourceResolvingException
-import io.dwsoft.restx.core.cause.causeId
+import io.dwsoft.restx.core.cause.causeKey
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.code.CodeResolvingException
 import io.dwsoft.restx.core.cause.message.MessageResolver
@@ -32,7 +32,7 @@ abstract class SingleErrorPayloadGeneratorTestsBase<R : SingleErrorPayload>(
             dummy()
         )
 
-        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeId("")) }
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
             .shouldHaveCause { it shouldBe exCause }
     }
 
@@ -44,7 +44,7 @@ abstract class SingleErrorPayloadGeneratorTestsBase<R : SingleErrorPayload>(
             dummy()
         )
 
-        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeId("")) }
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
             .shouldHaveCause { it shouldBe exCause }
     }
 
@@ -56,7 +56,7 @@ abstract class SingleErrorPayloadGeneratorTestsBase<R : SingleErrorPayload>(
             mock { every { messageFor(any()) } throws exCause }
         )
 
-        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeId("")) }
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
             .shouldHaveCause { it shouldBe exCause }
     }
 
@@ -69,7 +69,7 @@ class OperationErrorPayloadGeneratorTests : SingleErrorPayloadGeneratorTestsBase
     },
     {
         test("payload with defined data is returned") {
-            val cause = Any().causeId("")
+            val cause = Any().causeKey("")
             val code = "code"
             val message = "message".asMessage()
             val generator = OperationErrorPayloadGenerator<Any>({ cause }, { code }, { message })
@@ -87,7 +87,7 @@ class RequestDataErrorPayloadGeneratorTests : SingleErrorPayloadGeneratorTestsBa
     },
     {
         test("payload with defined data is returned") {
-            val cause = Any().causeId("")
+            val cause = Any().causeKey("")
             val code = "code"
             val message = "message".asMessage()
             val source = RequestDataError.Source.query("query")

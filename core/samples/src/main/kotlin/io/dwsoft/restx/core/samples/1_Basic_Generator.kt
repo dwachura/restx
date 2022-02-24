@@ -9,7 +9,7 @@ fun main() {
     val generator = RestX.config {
         treat<Exception> { asOperationError {
             identifiedBy { type() } // identify faults by its type - could be omitted, as it's a default behavior
-            withCode { sameAsCauseId() } // generate payloads with code same as fault's identifier - could be omitted, as it's a default behavior
+            withCode { sameAsCauseKey() } // generate payloads with code same as fault's identifier - could be omitted, as it's a default behavior
             withMessage { generatedAs { Message(context.localizedMessage) } } // generate payloads with exception message
             withStatus(500) // HTTP status of a response
         } }

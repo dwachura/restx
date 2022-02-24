@@ -9,7 +9,7 @@ import java.io.IOException
 fun main() {
     val generator = RestX.config {
         treat<Exception> { asOperationError {
-            withCode { mapBased( // codes will be taken from defined map - key == fault id (type name, as defined above)
+            withCode { mapBased( // codes will be taken from defined map - key == fault key (type name, as defined above)
                 Exception::class.qualifiedName!! to "GENERIC_FAILURE",
                 RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
                 IOException::class.qualifiedName!! to "IO_FAILURE"

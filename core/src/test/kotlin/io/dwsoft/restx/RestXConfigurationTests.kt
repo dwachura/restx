@@ -66,12 +66,12 @@ class RestXConfigurationTests : FunSpec({
     }
 
     test("generator of single error payloads with map-based code is created") {
-        val causeId = "id"
+        val causeKey = "key"
         val expectedCode = "code"
         val generator = RestX.config {
             treat<Any> { asOperationError {
-                identifiedBy(causeId)
-                withCode { mapBased(causeId to expectedCode) }
+                identifiedBy(causeKey)
+                withCode { mapBased(causeKey to expectedCode) }
                 withMessage { dummy() }
                 withStatus { dummy() }
             } }

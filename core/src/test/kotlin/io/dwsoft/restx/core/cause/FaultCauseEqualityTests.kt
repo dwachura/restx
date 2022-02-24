@@ -4,9 +4,9 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class FaultCauseIdEqualityTests : FunSpec({
-    test("objects with the same id are equal, regardless of fault results") {
-        val causeOf: FaultCreator = { it.causeId("id") }
+class FaultCauseEqualityTests : FunSpec({
+    test("objects with the same key are equal, regardless of fault results") {
+        val causeOf: FaultCreator = { it.causeKey("key") }
 
         assertSoftly {
             (causeOf(Any()) == causeOf(Any())) shouldBe true
@@ -14,10 +14,10 @@ class FaultCauseIdEqualityTests : FunSpec({
         }
     }
 
-    test("objects with different id, created for the same fault are not equal") {
+    test("objects with different key are not equal, even though are created for the same fault") {
         val fault = Any()
-        val cause1 = fault.causeId("id-1")
-        val cause2 = fault.causeId("id-2")
+        val cause1 = fault.causeKey("key-1")
+        val cause2 = fault.causeKey("key-2")
 
         (cause1 == cause2) shouldBe false
     }

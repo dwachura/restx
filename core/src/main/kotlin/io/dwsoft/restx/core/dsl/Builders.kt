@@ -36,8 +36,7 @@ object BasicResponseGeneratorBuilder {
 object OperationErrorPayloadGeneratorBuilder {
     fun <T : Any> buildFrom(config: OperationErrorPayloadGeneratorSpec<T>): OperationErrorPayloadGenerator<T> =
         OperationErrorPayloadGenerator(
-            config.causeResolverFactoryBlock?.invoke(CauseResolvers())
-                ?: throw IllegalArgumentException("Cause resolver not configured"),
+            config.causeResolverFactoryBlock?.invoke(CauseResolvers()) ?: CauseResolvers<T>().type(),
             config.codeResolverFactoryBlock?.invoke(CodeResolvers())
                 ?: throw IllegalArgumentException("Code resolver not configured"),
             config.messageResolverFactoryBlock?.invoke(MessageResolvers())

@@ -15,7 +15,7 @@ fun interface MessageResolver<in T : Any> {
     /**
      * Method returning [message][Message] for given [Cause].
      *
-     * @throws MessageResolvingException in case message for given [id][Cause] cannot be resolved
+     * @throws MessageResolvingException in case message for given [key][Cause.key] cannot be resolved
      */
     fun messageFor(cause: Cause<T>): Message
 }

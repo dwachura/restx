@@ -102,7 +102,7 @@ class CauseResolvers<T : Any> {
     /**
      * Factory method for [CauseResolver]s that provide causes identified by given constant value.
      */
-    fun fixedId(id: String): CauseResolver<T> = function { id }
+    fun fixedKey(key: String): CauseResolver<T> = function { key }
 
     /**
      * Factory method for [CauseResolver]s that provide causes identified by fault's [runtime type name]
@@ -140,9 +140,9 @@ class CodeResolvers<T : Any> {
     fun resolvedBy(resolver: CodeResolver<T>): CodeResolver<T> = resolver
 
     /**
-     * Factory method for [resolvers][CodeResolver] that returns code same as passed [cause id][Cause.id].
+     * Factory method for [resolvers][CodeResolver] that returns code same as passed [cause key][Cause.key].
      */
-    fun sameAsCauseId(): CodeResolver<T> = resolvedBy { it.id }
+    fun sameAsCauseKey(): CodeResolver<T> = resolvedBy { it.key }
 
     /**
      * Factory method for [FixedCodeResolver]
