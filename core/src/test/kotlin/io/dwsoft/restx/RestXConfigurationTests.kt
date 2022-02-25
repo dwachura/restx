@@ -1,5 +1,7 @@
 package io.dwsoft.restx
 
+import io.dwsoft.restx.core.dsl.BasicResponseGenerators
+import io.dwsoft.restx.core.dsl.ResponseGenerators
 import io.dwsoft.restx.core.dsl.generatedAs
 import io.dwsoft.restx.core.dsl.identifiedBy
 import io.dwsoft.restx.core.dsl.mapBased
@@ -13,6 +15,7 @@ import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError
 import io.dwsoft.restx.core.payload.RequestDataError.Source
 import io.dwsoft.restx.core.payload.asMessage
+import io.dwsoft.restx.core.response.BasicResponseGenerator
 import io.dwsoft.restx.core.response.HttpStatus
 import io.dwsoft.restx.core.response.ResponseGenerator
 import io.kotest.core.spec.style.FunSpec
@@ -20,11 +23,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import io.mockk.verify
 
-// TODO: default configurations
 class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with code the same as object type is created") {
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 withMessage { dummy() }
                 withStatus { dummy() }
             } }
@@ -38,7 +40,7 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with fixed code is created") {
         val expectedCode = "code"
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 withCode(expectedCode)
                 withMessage { dummy() }
                 withStatus { dummy() }
@@ -53,7 +55,7 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with custom generated code is created") {
         val expectedCode = "code"
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 withCode { generatedAs { expectedCode } }
                 withMessage { dummy() }
                 withStatus { dummy() }
@@ -69,7 +71,7 @@ class RestXConfigurationTests : FunSpec({
         val causeKey = "key"
         val expectedCode = "code"
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 identifiedBy(causeKey)
                 withCode { mapBased(causeKey to expectedCode) }
                 withMessage { dummy() }
@@ -85,7 +87,7 @@ class RestXConfigurationTests : FunSpec({
     test("generator of single error payloads with fixed message is created") {
         val expectedMessage = "message"
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 withMessage(expectedMessage)
                 withStatus { dummy() }
             } }
@@ -114,7 +116,7 @@ class RestXConfigurationTests : FunSpec({
     test("single error payload with defined status is created") {
         val status = 500
         val generator = RestX.config {
-            treat<Any> { asOperationError {
+            treatAny { asOperationError {
                 withMessage { dummy() }
                 withStatus(status)
             } }
@@ -198,3 +200,7 @@ class RestXConfigurationTests : FunSpec({
         }
     }
 })
+
+private fun ResponseGenerators.treatAny(
+    factoryBlock : BasicResponseGenerators<Any>.() -> BasicResponseGenerator<Any>
+) = treat(factoryBlock)

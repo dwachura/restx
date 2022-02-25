@@ -1,6 +1,5 @@
 package io.dwsoft.restx.core.payload
 
-import io.dwsoft.restx.InitBlock
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.CauseResolvingException
 import io.dwsoft.restx.core.cause.DataErrorSourceResolvingException
@@ -22,7 +21,7 @@ private typealias SingleErrorGeneratorFactory =
 
 abstract class SingleErrorPayloadGeneratorTestsBase<R : SingleErrorPayload>(
     createGenerator: SingleErrorGeneratorFactory,
-    additionalTestsInitBlock: InitBlock<FunSpec> = {}
+    additionalTestsInitBlock: FunSpec.() -> Unit = {}
 ) : FunSpec({
     test("exception is thrown in case of cause resolver failure") {
         val exCause = CauseResolvingException("")

@@ -48,24 +48,3 @@ class MapBasedCodeResolverTests : FunSpec({
         }.message should containInOrder("None code mapping found for key", unmappedKey)
     }
 })
-
-// TODO
-//class GeneratedCodeResolverTests : FunSpec({
-//    test("code defined by passed function is returned") {
-//        val suffix = Random.nextUInt()
-//        val sut = CodeResolver.generatedAs<Any> { "${context::class.simpleName!!}_$suffix" }
-//
-//        assertSoftly {
-//            sut.codeFor(Any().causeId("id1")) shouldBe "${Any::class.simpleName}_$suffix"
-//            sut.codeFor(Exception().causeId("id2")) shouldBe "${Exception::class.simpleName}_$suffix"
-//            sut.codeFor("fault".causeId("id1")) shouldBe "${String::class.simpleName}_$suffix"
-//        }
-//    }
-//
-//    test("code same as cause id is returned") {
-//        val expectedId = "id"
-//        val sut = CodeResolver.sameAsCauseId<Any>()
-//
-//        sut.codeFor(Any().causeId(expectedId)) shouldBe expectedId
-//    }
-//})

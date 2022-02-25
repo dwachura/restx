@@ -23,6 +23,9 @@ import kotlin.reflect.full.superclasses
 
 class RestXConfigurationException(cause: Throwable) : RestXException(cause)
 
+/**
+ * Factories of [ResponseGenerator]s.
+ */
 class ResponseGenerators {
     /**
      * Entry method to fluently configure [BasicResponseGenerator]s.
@@ -53,6 +56,9 @@ class ResponseGenerators {
     }
 }
 
+/**
+ * Factories of [BasicResponseGenerator]s.
+ */
 class BasicResponseGenerators<T : Any> {
     fun asOperationError(initBlock: OperationErrorResponseGeneratorSpec<T>.() -> Unit) =
         BasicResponseGeneratorBuilder.buildFrom(OperationErrorResponseGeneratorSpecDelegate<T>().apply(initBlock))
@@ -65,7 +71,7 @@ class BasicResponseGenerators<T : Any> {
 }
 
 /**
- * Facade to factories of [SingleErrorPayloadGenerator]s.
+ * Factories of [SingleErrorPayloadGenerator]s.
  */
 class SingleErrorPayloadGenerators<T : Any> {
     fun operationError(initBlock: OperationErrorPayloadGeneratorSpec<T>.() -> Unit) =
