@@ -50,7 +50,7 @@ identify concrete "reasons of fault". They are created during payload generation
 [GPL](./LICENSE)
 
 <!-- References -->
-[build glyph]: https://github.com/dwachura/restx/actions/workflows/master-ci.yml/badge.svg?branch=master
-[github actions]: https://github.com/dwachura/restx/actions/workflows/master-ci.yml
+[build glyph]: https://github.com/dwachura/restx/actions/workflows/main-ci.yml/badge.svg?branch=main
+[github actions]: https://github.com/dwachura/restx/actions/workflows/main-ci.yml
 [general flow diagram]: ./.docs/assets/general-flow-diagram.png "flow diagram"
 [core samples dir]: ./core/samples
