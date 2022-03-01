@@ -38,8 +38,8 @@ As it was earlier spoken, in RESTX objects of any type can be treated as faults.
 represent different service errors and thus should be converted into payloads with different code and message (basing, for example, on one of 
 the fault's property).  
 To support such cases, payload generators use (fault) **causes** in their work. Causes can be understood as simple wrappers that let to 
-identify concrete "reasons of fault". They are created during payload generation process by **cause resolvers** and to be further used by 
-**cause processors** which are responsible for actual generation of response payloads.
+identify concrete "reasons of fault". They are created during payload generation process by **cause resolvers** and are further processed by 
+generators to generate actual payload of a response.
 
 ## Usage examples
 

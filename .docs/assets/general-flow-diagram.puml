@@ -2,12 +2,11 @@
 "initiator" -> "response generator" : get response of <fault>
 "response generator" -> "payload generator" : generate payload for <fault>
 "payload generator" -> "cause resover" : resolve cause of <fault>
-"cause resover" -> "payload generator" : <cause>
-"payload generator" -> "cause processor" : generate payload for <cause>
-"cause processor" -> "payload generator" : <payload>
-"payload generator" -> "response generator" : <payload>
+"cause resover" --> "payload generator" : <cause>
+"payload generator" -> "payload generator" : generate payload for <cause>
+"payload generator" --> "response generator" : <payload>
 "response generator" -> "status provider" : get status
-"status provider" -> "response generator" : <status>
+"status provider" --> "response generator" : <status>
 "response generator" -> "response generator" : combine  <payload> and <status> into <response>
 "response generator" -> "initiator" : <response>
 @enduml
