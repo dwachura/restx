@@ -1,9 +1,9 @@
 package io.dwsoft.restx.core.dsl
 
 import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.DataErrorSourceResolver
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.message.MessageResolver
+import io.dwsoft.restx.core.payload.DataErrorSourceResolver
 import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator
 import io.dwsoft.restx.core.payload.OperationError
 import io.dwsoft.restx.core.payload.RequestDataError

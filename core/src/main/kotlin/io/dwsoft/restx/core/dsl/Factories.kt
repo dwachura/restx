@@ -4,13 +4,13 @@ import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
 import io.dwsoft.restx.core.cause.Cause
 import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.DataErrorSourceResolver
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.code.FixedCodeResolver
 import io.dwsoft.restx.core.cause.code.MapBasedCodeResolver
 import io.dwsoft.restx.core.cause.message.MessageResolver
 import io.dwsoft.restx.core.cause.message.MessageTextProvider
 import io.dwsoft.restx.core.cause.message.PlainTextMessageResolver
+import io.dwsoft.restx.core.payload.DataErrorSourceResolver
 import io.dwsoft.restx.core.payload.Message
 import io.dwsoft.restx.core.payload.SingleErrorPayloadGenerator
 import io.dwsoft.restx.core.response.BasicResponseGenerator

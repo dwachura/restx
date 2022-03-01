@@ -2,7 +2,6 @@ package io.dwsoft.restx.core.payload
 
 import io.dwsoft.restx.core.cause.CauseResolver
 import io.dwsoft.restx.core.cause.CauseResolvingException
-import io.dwsoft.restx.core.cause.DataErrorSourceResolvingException
 import io.dwsoft.restx.core.cause.causeKey
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.code.CodeResolvingException

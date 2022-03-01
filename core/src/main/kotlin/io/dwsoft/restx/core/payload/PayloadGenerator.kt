@@ -2,10 +2,11 @@ package io.dwsoft.restx.core.payload
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
+import io.dwsoft.restx.core.cause.Cause
 import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.DataErrorSourceResolver
 import io.dwsoft.restx.core.cause.code.CodeResolver
 import io.dwsoft.restx.core.cause.message.MessageResolver
+import io.dwsoft.restx.core.payload.RequestDataError.Source
 
 /**
  * Base interface for generators of error response payloads.
@@ -81,6 +82,21 @@ class RequestDataErrorPayloadGenerator<T : Any>(
                 .let { (code, message, dataErrorSource) -> RequestDataError(code, message, dataErrorSource) }
         }.fold(onSuccess = { it }, onFailure = { throw PayloadGenerationException(it) })
 }
+
+/**
+ * Interface of [data error sources][Source] resolvers.
+ */
+fun interface DataErrorSourceResolver<T : Any> {
+    /**
+     * Method resolving [Source] for the given error cause.
+     *
+     * @throws DataErrorSourceResolvingException in case of errors during resolving
+     */
+    fun sourceOf(cause: Cause<T>): Source
+}
+operator fun <T : Any> DataErrorSourceResolver<T>.invoke(cause: Cause<T>) = this.sourceOf(cause)
+
+class DataErrorSourceResolvingException : RestXException()
 
 /**
  * Generator creating payloads for fault results caused by multiple errors.
