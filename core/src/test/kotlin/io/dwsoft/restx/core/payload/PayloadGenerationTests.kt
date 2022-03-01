@@ -1,45 +1,115 @@
 package io.dwsoft.restx.core.payload
 
-import io.dwsoft.restx.core.cause.CauseProcessor
 import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.causeId
-import io.dwsoft.restx.core.cause.invoke
+import io.dwsoft.restx.core.cause.CauseResolvingException
+import io.dwsoft.restx.core.cause.causeKey
+import io.dwsoft.restx.core.cause.code.CodeResolver
+import io.dwsoft.restx.core.cause.code.CodeResolvingException
+import io.dwsoft.restx.core.cause.message.MessageResolver
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.throwable.shouldHaveCause
 import io.mockk.every
 import io.mockk.verify
 
-class SingleErrorPayloadGeneratorTests : FunSpec({
-    test("fault cause info resolver is called") {
-        val resolver = mock<CauseResolver<Any>> {
-            every { this@mock.causeOf(any()) } returns dummy()
-        }
-        val generator = SingleErrorPayloadGenerator(resolver, dummy())
-        val fault = Any()
+private typealias SingleErrorGeneratorFactory =
+    (CauseResolver<Any>, CodeResolver<Any>, MessageResolver<Any>) -> SingleErrorPayloadGenerator<Any>
 
-        generator.payloadOf(fault)
-
-        verify { resolver(fault) }
-    }
-
-    test("fault cause info processor is called") {
-        val cause = Any().causeId("id")
-        val processor = mock<CauseProcessor<Any>>()
-        val generator = SingleErrorPayloadGenerator(
-            mock {
-                every { this@mock.causeOf(any()) } returns cause
-            },
-            processor
+abstract class SingleErrorPayloadGeneratorTestsBase<R : SingleErrorPayload>(
+    createGenerator: SingleErrorGeneratorFactory,
+    additionalTestsInitBlock: FunSpec.() -> Unit = {}
+) : FunSpec({
+    test("exception is thrown in case of cause resolver failure") {
+        val exCause = CauseResolvingException("")
+        val sut = createGenerator(
+            mock { every { causeOf(any()) } throws exCause },
+            dummy(),
+            dummy()
         )
 
-        generator.payloadOf(Any())
-
-        verify { processor.process(cause) }
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
+            .shouldHaveCause { it shouldBe exCause }
     }
+
+    test("exception is thrown in case of code resolver failure") {
+        val exCause = CodeResolvingException("")
+        val sut = createGenerator(
+            dummy(),
+            mock { every { codeFor(any()) } throws exCause },
+            dummy()
+        )
+
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
+            .shouldHaveCause { it shouldBe exCause }
+    }
+
+    test("exception is thrown in case of message resolver failure") {
+        val exCause = CodeResolvingException("")
+        val sut = createGenerator(
+            dummy(),
+            dummy(),
+            mock { every { messageFor(any()) } throws exCause }
+        )
+
+        shouldThrow<PayloadGenerationException> { sut.payloadOf(Any().causeKey("")) }
+            .shouldHaveCause { it shouldBe exCause }
+    }
+
+    this.apply(additionalTestsInitBlock)
 })
+
+class OperationErrorPayloadGeneratorTests : SingleErrorPayloadGeneratorTestsBase<OperationError>(
+    { causeResolver, codeResolver, messageResolver ->
+        OperationErrorPayloadGenerator(causeResolver, codeResolver, messageResolver)
+    },
+    {
+        test("payload with defined data is returned") {
+            val cause = Any().causeKey("")
+            val code = "code"
+            val message = "message".asMessage()
+            val generator = OperationErrorPayloadGenerator<Any>({ cause }, { code }, { message })
+
+            val payload = generator.payloadOf(Any())
+
+            payload shouldBe OperationError(code, message)
+        }
+    }
+)
+
+class RequestDataErrorPayloadGeneratorTests : SingleErrorPayloadGeneratorTestsBase<RequestDataError>(
+    { causeResolver, codeResolver, messageResolver ->
+        RequestDataErrorPayloadGenerator(causeResolver, codeResolver, messageResolver, dummy())
+    },
+    {
+        test("payload with defined data is returned") {
+            val cause = Any().causeKey("")
+            val code = "code"
+            val message = "message".asMessage()
+            val source = RequestDataError.Source.query("query")
+            val generator = RequestDataErrorPayloadGenerator<Any>({ cause }, { code }, { message }, { source })
+
+            val payload = generator.payloadOf(Any())
+
+            payload shouldBe RequestDataError(code, message, source)
+        }
+
+        test("exception is thrown in case data error source cannot be resolved") {
+            val exCause = DataErrorSourceResolvingException()
+            val generator = RequestDataErrorPayloadGenerator<Any>(
+                dummy(),
+                dummy(),
+                dummy(),
+                mock { every { sourceOf(any()) } throws exCause }
+            )
+
+            shouldThrow<PayloadGenerationException> { generator.payloadOf(Any()) }
+                .shouldHaveCause { it shouldBe exCause }
+        }
+    }
+)
 
 class MultiErrorPayloadGeneratorTests : FunSpec({
     test("sub-errors extractor function is called") {
@@ -73,7 +143,7 @@ class MultiErrorPayloadGeneratorTests : FunSpec({
     test("exception is thrown when no sub-errors are extracted") {
         val generator = MultiErrorPayloadGenerator<Any, Any>({ emptyList() }, dummy())
 
-        shouldThrow<NoSubErrorsExtracted> { generator.payloadOf(Any()) }
+        shouldThrow<PayloadGenerationException> { generator.payloadOf(Any()) }
     }
 
     test("multi error payload containing errors generated for sub-errors is returned") {

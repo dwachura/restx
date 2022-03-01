@@ -5,9 +5,9 @@ package io.dwsoft.restx.core.cause
  *
  * @param T type of an [object][context] holding info related to this cause of failure
  */
-class Cause<out T : Any>(val id: String, val context: T) {
+class Cause<out T : Any>(val key: String, val context: T) {
     /**
-     * Equality check - [Cause] instances are considered the same, if they are identified by the same [id].
+     * Equality check - [Cause] instances are considered the same, if they are identified by the same [key].
      */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -15,21 +15,21 @@ class Cause<out T : Any>(val id: String, val context: T) {
 
         other as Cause<*>
 
-        if (id != other.id) return false
+        if (key != other.key) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return id.hashCode()
+        return key.hashCode()
     }
 
     override fun toString(): String {
-        return "CauseId(id='$id')"
+        return "Cause(key='$key')"
     }
 }
 
 /**
- * Utility method to create [Cause] with given [id] for fault represented by this object.
+ * Utility method to create [Cause] with given [key] for fault represented by this object.
  */
-internal fun <T : Any> T.causeId(id: String) = Cause(id, this)
+internal fun <T : Any> T.causeKey(key: String) = Cause(key, this)

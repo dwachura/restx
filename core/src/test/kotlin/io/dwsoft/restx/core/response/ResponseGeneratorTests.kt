@@ -12,14 +12,14 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.verify
 
-class SimpleResponseGeneratorTests : FunSpec({
+class BasicResponseGeneratorTests : FunSpec({
     test("payload generator is called") {
         val fault = Any()
         val generator = mock<ErrorPayloadGenerator<Any, *>> {
             every { payloadOf(fault) } returns dummy()
         }
 
-        SimpleResponseGenerator(generator, dummy()).responseOf(fault)
+        BasicResponseGenerator(generator, dummy()).responseOf(fault)
 
         verify { generator.payloadOf(fault) }
     }
@@ -32,14 +32,14 @@ class SimpleResponseGeneratorTests : FunSpec({
             every { get() } returns dummy()
         }
 
-        SimpleResponseGenerator(generator, statusProvider).responseOf(Any())
+        BasicResponseGenerator(generator, statusProvider).responseOf(Any())
 
         verify { statusProvider.get() }
     }
 
     test("fault is converted to response") {
         val payload = dummy<ErrorResponsePayload>()
-        val generator = SimpleResponseGenerator(
+        val generator = BasicResponseGenerator(
             mock<ErrorPayloadGenerator<Any, *>> {
                 every { payloadOf(any()) } returns payload
             }
