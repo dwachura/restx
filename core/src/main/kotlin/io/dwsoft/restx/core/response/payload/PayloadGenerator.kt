@@ -1,12 +1,8 @@
-package io.dwsoft.restx.core.payload
+package io.dwsoft.restx.core.response.payload
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
-import io.dwsoft.restx.core.cause.Cause
-import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.code.CodeResolver
-import io.dwsoft.restx.core.cause.message.MessageResolver
-import io.dwsoft.restx.core.payload.RequestDataError.Source
+import io.dwsoft.restx.core.response.payload.RequestDataError.Source
 
 /**
  * Base interface for generators of error response payloads.
@@ -27,7 +23,7 @@ class PayloadGenerationException(cause: Throwable) : RestXException(cause)
 
 private fun <T : Any, R : ErrorResponsePayload> ErrorPayloadGenerator<T, R>.processRethrowingPayloadGenerationException(
     task: ErrorPayloadGenerator<T, R>.() -> R
-) : R = runCatching(task).fold(onSuccess = { it }, onFailure = { throw PayloadGenerationException(it) })
+): R = runCatching(task).fold(onSuccess = { it }, onFailure = { throw PayloadGenerationException(it) })
 
 /**
  * Generator creating [payloads][SingleErrorPayload] for faults caused by single errors.
@@ -74,11 +70,13 @@ class RequestDataErrorPayloadGenerator<T : Any>(
         runCatching {
             causeResolver.causeOf(fault)
                 .also { log.info { "Processing cause $it" } }
-                .let { Triple(
-                    codeResolver.codeFor(it),
-                    messageResolver.messageFor(it),
-                    dataErrorSourceResolver.sourceOf(it)
-                ) }
+                .let {
+                    Triple(
+                        codeResolver.codeFor(it),
+                        messageResolver.messageFor(it),
+                        dataErrorSourceResolver.sourceOf(it)
+                    )
+                }
                 .let { (code, message, dataErrorSource) -> RequestDataError(code, message, dataErrorSource) }
         }.fold(onSuccess = { it }, onFailure = { throw PayloadGenerationException(it) })
 }

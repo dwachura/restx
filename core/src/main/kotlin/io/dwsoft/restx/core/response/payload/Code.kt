@@ -1,8 +1,7 @@
-package io.dwsoft.restx.core.cause.code
+package io.dwsoft.restx.core.response.payload
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
-import io.dwsoft.restx.core.cause.Cause
 
 /**
  * Interface for cause code resolvers.

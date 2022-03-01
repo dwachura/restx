@@ -1,10 +1,10 @@
-package io.dwsoft.restx.core.cause
+package io.dwsoft.restx.core.response.payload
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class FaultCauseEqualityTests : FunSpec({
+class CauseEqualityTests : FunSpec({
     test("objects with the same key are equal, regardless of fault results") {
         val causeOf: FaultCreator = { it.causeKey("key") }
 

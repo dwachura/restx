@@ -1,14 +1,5 @@
 package io.dwsoft.restx.core.dsl
 
-import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.code.CodeResolver
-import io.dwsoft.restx.core.cause.message.MessageResolver
-import io.dwsoft.restx.core.payload.DataErrorSourceResolver
-import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator
-import io.dwsoft.restx.core.payload.OperationError
-import io.dwsoft.restx.core.payload.RequestDataError
-import io.dwsoft.restx.core.payload.SingleErrorPayloadGenerator
-import io.dwsoft.restx.core.payload.SubErrorExtractor
 import io.dwsoft.restx.core.response.BasicResponseGenerator
 import io.dwsoft.restx.core.response.CompositeResponseGenerator
 import io.dwsoft.restx.core.response.HttpStatus
@@ -16,6 +7,15 @@ import io.dwsoft.restx.core.response.ResponseGenerator
 import io.dwsoft.restx.core.response.ResponseGeneratorRegistry
 import io.dwsoft.restx.core.response.ResponseStatusProvider
 import io.dwsoft.restx.core.response.TypeBasedResponseGeneratorRegistry
+import io.dwsoft.restx.core.response.payload.CauseResolver
+import io.dwsoft.restx.core.response.payload.CodeResolver
+import io.dwsoft.restx.core.response.payload.DataErrorSourceResolver
+import io.dwsoft.restx.core.response.payload.MessageResolver
+import io.dwsoft.restx.core.response.payload.MultiErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.OperationError
+import io.dwsoft.restx.core.response.payload.RequestDataError
+import io.dwsoft.restx.core.response.payload.SingleErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.SubErrorExtractor
 import kotlin.reflect.KClass
 
 /**
@@ -53,8 +53,8 @@ sealed interface OperationErrorResponseGeneratorSpec<T : Any> :
 
 internal class OperationErrorResponseGeneratorSpecDelegate<T : Any> :
     OperationErrorResponseGeneratorSpec<T>,
-    OperationErrorPayloadGeneratorSpec<T> by OperationErrorPayloadGeneratorSpecDelegate()
-{
+    OperationErrorPayloadGeneratorSpec<T> by OperationErrorPayloadGeneratorSpecDelegate() {
+
     override var responseStatusProviderFactoryBlock: (ResponseStatusProviders.() -> ResponseStatusProvider)? = null
         private set
 
@@ -72,8 +72,8 @@ sealed interface RequestDataErrorResponseGeneratorSpec<T : Any> :
 
 internal class RequestDataErrorResponseGeneratorSpecDelegate<T : Any> :
     RequestDataErrorResponseGeneratorSpec<T>,
-    RequestDataErrorPayloadGeneratorSpec<T> by RequestDataErrorPayloadGeneratorSpecDelegate()
-{
+    RequestDataErrorPayloadGeneratorSpec<T> by RequestDataErrorPayloadGeneratorSpecDelegate() {
+
     override var responseStatusProviderFactoryBlock: (ResponseStatusProviders.() -> ResponseStatusProvider)? = null
         private set
 
@@ -167,8 +167,8 @@ internal class RequestDataErrorPayloadGeneratorSpecDelegate<T : Any> : RequestDa
     override var messageResolverFactoryBlock: (MessageResolvers<T>.() -> MessageResolver<T>)? = null
         private set
     override var dataErrorSourceResolverFactoryBlock:
-            (DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>)? = null
-        private set
+        (DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>)? = null
+            private set
 
     override fun identifiedBy(factoryBlock: CauseResolvers<T>.() -> CauseResolver<T>) {
         causeResolverFactoryBlock = factoryBlock
@@ -197,8 +197,8 @@ sealed interface MultiErrorResponseGeneratorSpec<T : Any, R : Any> :
 
 internal class MultiErrorResponseGeneratorSpecDelegate<T : Any, R : Any> :
     MultiErrorResponseGeneratorSpec<T, R>,
-    MultiErrorPayloadGeneratorSpec<T, R> by MultiErrorPayloadGeneratorSpecDelegate()
-{
+    MultiErrorPayloadGeneratorSpec<T, R> by MultiErrorPayloadGeneratorSpecDelegate() {
+
     override var responseStatusProviderFactoryBlock: (ResponseStatusProviders.() -> ResponseStatusProvider)? = null
         private set
 
@@ -236,8 +236,8 @@ internal class MultiErrorPayloadGeneratorSpecDelegate<T : Any, R : Any> : MultiE
     override var subErrorExtractor: SubErrorExtractor<T, R>? = null
         private set
     override var subErrorPayloadGeneratorFactoryBlock:
-            (SingleErrorPayloadGenerators<R>.() -> SingleErrorPayloadGenerator<R>)? = null
-        private set
+        (SingleErrorPayloadGenerators<R>.() -> SingleErrorPayloadGenerator<R>)? = null
+            private set
 
     override fun extractedAs(extractor: SubErrorExtractor<T, R>) { subErrorExtractor = extractor }
 

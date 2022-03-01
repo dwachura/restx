@@ -1,6 +1,6 @@
 package io.dwsoft.restx.core.response
 
-import io.dwsoft.restx.core.payload.ErrorResponsePayload
+import io.dwsoft.restx.core.response.payload.ErrorResponsePayload
 
 /**
  * Model of HTTP response containing info about error(s) that happened into API process.

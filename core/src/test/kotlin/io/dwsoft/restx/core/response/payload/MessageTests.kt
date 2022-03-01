@@ -1,12 +1,11 @@
-package io.dwsoft.restx.core.payload
+package io.dwsoft.restx.core.response.payload
 
 import io.dwsoft.restx.core.dummy
-import io.dwsoft.restx.core.payload.Message.Translator.LocaleNotSupported
-import io.dwsoft.restx.core.payload.Message.Translator.LocalizationException
+import io.dwsoft.restx.core.response.payload.Message.Translator.LocaleNotSupported
+import io.dwsoft.restx.core.response.payload.Message.Translator.LocalizationException
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContainInOrder
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import java.util.Locale
 
@@ -29,8 +28,10 @@ class MessageTests : FunSpec({
     }
 
     test(
-        """message configured with default translation strategy returns message's value for unsupported value,
-            | when no default display text was set""".trimMargin()
+        """
+            |message configured with default translation strategy returns message's value for unsupported value,
+            | when no default display text was set
+        """.trimMargin()
     ) {
         val expectedText = "default"
         val message = Message(expectedText).withDefaultTranslator { _, locale -> throw LocaleNotSupported(locale) }

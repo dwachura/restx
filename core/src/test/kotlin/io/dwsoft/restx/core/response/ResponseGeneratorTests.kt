@@ -2,8 +2,8 @@ package io.dwsoft.restx.core.response
 
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
-import io.dwsoft.restx.core.payload.ErrorPayloadGenerator
-import io.dwsoft.restx.core.payload.ErrorResponsePayload
+import io.dwsoft.restx.core.response.payload.ErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.ErrorResponsePayload
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -88,9 +88,9 @@ class CompositeResponseGeneratorTests : FunSpec({
             every { responseOf(any()) } returns expectedResult
         }
 
-        val result = CompositeResponseGenerator(mock {
-            every { searchFor(any()) } returns generator
-        }).responseOf(Any())
+        val result = CompositeResponseGenerator(
+            mock { every { searchFor(any()) } returns generator }
+        ).responseOf(Any())
 
         result shouldBeSameInstanceAs expectedResult
     }

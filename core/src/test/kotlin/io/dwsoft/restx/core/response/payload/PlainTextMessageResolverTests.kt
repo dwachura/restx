@@ -1,4 +1,4 @@
-package io.dwsoft.restx.core.cause.message
+package io.dwsoft.restx.core.response.payload
 
 import io.dwsoft.restx.core.dummy
 import io.kotest.core.spec.style.FunSpec

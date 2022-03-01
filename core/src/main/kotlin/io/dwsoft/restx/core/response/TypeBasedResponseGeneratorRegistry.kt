@@ -39,12 +39,11 @@ class TypeBasedResponseGeneratorRegistry(
     private fun searchRecursively(queue: ArrayDeque<KClass<*>>): ResponseGenerator<*>? {
         return queue.removeFirstOrNull()?.run {
             log.info { "Looking up mapping for ${this.java.canonicalName}" }
-            return (faultTypeToGenerator[this]
+            return faultTypeToGenerator[this]
                 ?: this.run {
                     this.supertypes.forEach { queue.addLast(it.classifier as KClass<*>) }
                     searchRecursively(queue)
                 }
-            )
         }
     }
 }

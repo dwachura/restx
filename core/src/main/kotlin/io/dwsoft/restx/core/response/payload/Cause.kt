@@ -1,4 +1,6 @@
-package io.dwsoft.restx.core.cause
+package io.dwsoft.restx.core.response.payload
+
+import io.dwsoft.restx.RestXException
 
 /**
  * Class that holds info that allows to identify specific reason of failure.
@@ -33,3 +35,18 @@ class Cause<out T : Any>(val key: String, val context: T) {
  * Utility method to create [Cause] with given [key] for fault represented by this object.
  */
 internal fun <T : Any> T.causeKey(key: String) = Cause(key, this)
+
+/**
+ * Interface of cause resolvers - services used to retrieve information about reasons of failure from passed
+ * fault result.
+ *
+ * @param T type of fault objects that resolvers of this class supports
+ *
+ * @throws CauseResolvingException in case of errors during resolving
+ */
+fun interface CauseResolver<T : Any> {
+    fun causeOf(fault: T): Cause<T>
+}
+operator fun <T : Any> CauseResolver<T>.invoke(fault: T) = causeOf(fault)
+
+class CauseResolvingException(message: String) : RestXException(message)

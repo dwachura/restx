@@ -1,11 +1,5 @@
-package io.dwsoft.restx.core.payload
+package io.dwsoft.restx.core.response.payload
 
-import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.CauseResolvingException
-import io.dwsoft.restx.core.cause.causeKey
-import io.dwsoft.restx.core.cause.code.CodeResolver
-import io.dwsoft.restx.core.cause.code.CodeResolvingException
-import io.dwsoft.restx.core.cause.message.MessageResolver
 import io.dwsoft.restx.core.dummy
 import io.dwsoft.restx.core.mock
 import io.kotest.assertions.throwables.shouldThrow

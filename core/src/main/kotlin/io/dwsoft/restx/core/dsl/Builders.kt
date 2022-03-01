@@ -1,15 +1,15 @@
 package io.dwsoft.restx.core.dsl
 
-import io.dwsoft.restx.core.cause.CauseResolver
-import io.dwsoft.restx.core.cause.code.CodeResolver
-import io.dwsoft.restx.core.payload.MultiErrorPayloadGenerator
-import io.dwsoft.restx.core.payload.OperationError
-import io.dwsoft.restx.core.payload.OperationErrorPayloadGenerator
-import io.dwsoft.restx.core.payload.RequestDataError
-import io.dwsoft.restx.core.payload.RequestDataErrorPayloadGenerator
 import io.dwsoft.restx.core.response.BasicResponseGenerator
 import io.dwsoft.restx.core.response.CompositeResponseGenerator
 import io.dwsoft.restx.core.response.TypeBasedResponseGeneratorRegistry
+import io.dwsoft.restx.core.response.payload.CauseResolver
+import io.dwsoft.restx.core.response.payload.CodeResolver
+import io.dwsoft.restx.core.response.payload.MultiErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.OperationError
+import io.dwsoft.restx.core.response.payload.OperationErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.RequestDataError
+import io.dwsoft.restx.core.response.payload.RequestDataErrorPayloadGenerator
 
 /**
  * Builder of [BasicResponseGenerator]s.

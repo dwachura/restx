@@ -2,7 +2,7 @@ package io.dwsoft.restx.core.response
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
-import io.dwsoft.restx.core.payload.ErrorPayloadGenerator
+import io.dwsoft.restx.core.response.payload.ErrorPayloadGenerator
 
 /**
  * Interface of the library's main component serving as an entry point to handle fault results of given type. That is,

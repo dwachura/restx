@@ -1,23 +1,10 @@
-package io.dwsoft.restx.core.payload
+package io.dwsoft.restx.core.response.payload
 
 import io.dwsoft.restx.RestXException
 import io.dwsoft.restx.core.Logging.initLog
-import io.dwsoft.restx.core.payload.Message.Translator.LocaleNotSupported
-import io.dwsoft.restx.core.payload.Message.Translator.LocalizationException
+import io.dwsoft.restx.core.response.payload.Message.Translator.LocaleNotSupported
+import io.dwsoft.restx.core.response.payload.Message.Translator.LocalizationException
 import java.util.Locale
-
-/**
- * Base interface used to flag classes that represent valid error response payload.
- */
-sealed interface ErrorResponsePayload
-
-/**
- * Base representation of a single error response payload.
- */
-sealed interface SingleErrorPayload : ErrorResponsePayload {
-    val code: String
-    val message: Message
-}
 
 /**
  * Representation of an error payload's message (human-readable description of an error that occurred) with optional
@@ -71,15 +58,15 @@ class Message private constructor(
 
         class LocalizationException : RestXException {
             constructor(message: String, locale: Locale, failureReason: String) :
-                    super(createExceptionMessage(message, locale, failureReason))
+                super(createExceptionMessage(message, locale, failureReason))
 
             constructor(message: String, locale: Locale, cause: Throwable) :
-                    super(createExceptionMessage(message, locale, cause.message), cause)
+                super(createExceptionMessage(message, locale, cause.message), cause)
 
             private companion object {
                 private fun createExceptionMessage(message: String, locale: Locale, failureReason: String?) =
                     "Translation of message ($message) into locale ${locale.displayName} failed" +
-                            with(failureReason) { if (this != null) ": $this" else "" }
+                        with(failureReason) { if (this != null) ": $this" else "" }
             }
         }
     }
@@ -122,87 +109,45 @@ class Message private constructor(
 internal fun String.asMessage() = Message(this)
 
 /**
- * Representation of an error response payload happened during request processing.
+ * Interface of cause message resolvers.
+ *
+ * @param T type of fault object which causes are supported by created object
  */
-data class OperationError(override val code: String, override val message: Message) : SingleErrorPayload
-
-/**
- * Representation of an error response payload caused by invalid request data.
- */
-data class RequestDataError(
-    override val code: String,
-    override val message: Message,
-    val source: Source
-) : SingleErrorPayload {
+fun interface MessageResolver<in T : Any> {
     /**
-     * Representation of a 'source' of invalid request data.
-     * It's used to provide additional information for API client regarding [type][type] and [place][location] of
-     * bad data, e.g. name of query param or path to body property.
+     * Method returning [message][Message] for given [Cause].
+     *
+     * @throws MessageResolvingException in case message for given [key][Cause.key] cannot be resolved
      */
-    class Source private constructor(val type: Type, val location: String) {
-        init {
-            require(location.isNotBlank()) { "Invalid data source location must be set" }
-        }
+    fun messageFor(cause: Cause<T>): Message
+}
+operator fun <T : Any> MessageResolver<T>.invoke(cause: Cause<T>) = messageFor(cause)
 
-        override fun toString(): String {
-            return "${javaClass.simpleName}(type=$type, location=$location)"
-        }
+class MessageResolvingException(message: String) : RestXException(message)
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+/**
+ * Implementation of [MessageResolver] returning plain text message.
+ */
+class PlainTextMessageResolver<T : Any>(private val messageTextProvider: MessageTextProvider<T>) : MessageResolver<T> {
+    private val log = initLog()
 
-            other as Source
-
-            if (type != other.type) return false
-            if (location != other.location) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = type.hashCode()
-            result = 31 * result + location.hashCode()
-            return result
-        }
-
-        companion object Factories {
-            fun query(param: String) = Source(Type.QUERY, param)
-            fun header(name: String) = Source(Type.HEADER, name)
-            fun body(path: String) = Source(Type.BODY, path)
-        }
-
-        /**
-         * Type of invalid request data source.
-         */
-        enum class Type {
-            /**
-             * Invalid value of a query parameter.
-             */
-            QUERY,
-
-            /**
-             * Invalid value of a header.
-             */
-            HEADER,
-
-            /**
-             * Invalid value of a body property.
-             */
-            BODY;
-
-            fun toSource(location: String) = Source(this, location)
-        }
-    }
+    override fun messageFor(cause: Cause<T>): Message =
+        messageTextProvider(cause).asMessage()
+            .also {
+                log.info { "Returning plain text message for $cause" }
+                log.debug { "Message: $it" }
+            }
 }
 
 /**
- * Representation of a response payload generated in case of multiple errors happen during
- * execution of application's logic.
+ * Interface of providers of [plain text messages'][PlainTextMessageResolver] content.
  */
-data class MultiErrorPayload(val errors: List<SingleErrorPayload>) : ErrorResponsePayload
-
-fun List<SingleErrorPayload>.toPayload() = when (size) {
-    1 -> first()
-    else -> MultiErrorPayload(this)
+fun interface MessageTextProvider<T : Any> {
+    /**
+     * Returns message text for given [cause].
+     *
+     * @throws MessageResolvingException in case of errors during provisioning message text
+     */
+    fun getFor(cause: Cause<T>): String
 }
+operator fun <T : Any> MessageTextProvider<T>.invoke(cause: Cause<T>) = getFor(cause)

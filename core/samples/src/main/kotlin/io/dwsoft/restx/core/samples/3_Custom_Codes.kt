@@ -8,15 +8,19 @@ import java.io.IOException
 
 fun main() {
     val generator = RestX.config {
-        treat<Exception> { asOperationError {
-            withCode { mapBased( // codes will be taken from defined map - key == fault key (type name, as defined above)
-                Exception::class.qualifiedName!! to "GENERIC_FAILURE",
-                RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
-                IOException::class.qualifiedName!! to "IO_FAILURE"
-            ) }
-            withMessage("Error message")
-            withStatus(500) // HTTP status of a response
-        } }
+        treat<Exception> {
+            asOperationError {
+                withCode {
+                    mapBased( // codes will be taken from defined map - key == fault key (type name, as defined above)
+                        Exception::class.qualifiedName!! to "GENERIC_FAILURE",
+                        RuntimeException::class.qualifiedName!! to "RUNTIME_FAILURE",
+                        IOException::class.qualifiedName!! to "IO_FAILURE"
+                    )
+                }
+                withMessage("Error message")
+                withStatus(500) // HTTP status of a response
+            }
+        }
     }
 
     var response = generator.responseOf(RuntimeException("Runtime failure"))

@@ -1,6 +1,6 @@
-package io.dwsoft.restx.core.payload
+package io.dwsoft.restx.core.response.payload
 
-import io.dwsoft.restx.core.payload.RequestDataError.Source
+import io.dwsoft.restx.core.response.payload.RequestDataError.Source
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.string.shouldContain

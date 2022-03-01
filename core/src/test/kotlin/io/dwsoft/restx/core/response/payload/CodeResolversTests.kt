@@ -1,6 +1,5 @@
-package io.dwsoft.restx.core.cause.code
+package io.dwsoft.restx.core.response.payload
 
-import io.dwsoft.restx.core.cause.causeKey
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec

@@ -1,8 +1,8 @@
 package io.dwsoft.restx.core.dsl
 
-import io.dwsoft.restx.core.cause.causeKey
-import io.dwsoft.restx.core.cause.invoke
-import io.dwsoft.restx.core.payload.Message
+import io.dwsoft.restx.core.response.payload.Message
+import io.dwsoft.restx.core.response.payload.causeKey
+import io.dwsoft.restx.core.response.payload.invoke
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

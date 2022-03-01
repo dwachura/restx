@@ -24,9 +24,9 @@ class TypeBasedResponseGeneratorRegistryTests : FunSpec({
     }
 
     test("lookup of unmapped type is null") {
-        val registry = TypeBasedResponseGeneratorRegistry(mapOf(
-            RuntimeException::class to dummy()
-        ))
+        val registry = TypeBasedResponseGeneratorRegistry(
+            mapOf(RuntimeException::class to dummy())
+        )
 
         val result = registry.searchFor(Exception())
 
@@ -35,9 +35,9 @@ class TypeBasedResponseGeneratorRegistryTests : FunSpec({
 
     test("generator is returned for mapped type") {
         val expectedGenerator = dummy<ResponseGenerator<RuntimeException>>()
-        val registry = TypeBasedResponseGeneratorRegistry(mapOf(
-            RuntimeException::class to expectedGenerator
-        ))
+        val registry = TypeBasedResponseGeneratorRegistry(
+            mapOf(RuntimeException::class to expectedGenerator)
+        )
 
         val result = registry.searchFor(RuntimeException())
 
@@ -46,9 +46,9 @@ class TypeBasedResponseGeneratorRegistryTests : FunSpec({
 
     test("generator is returned for mapped base type when no explicit mapping exists") {
         val expectedGenerator = dummy<ResponseGenerator<RuntimeException>>()
-        val registry = TypeBasedResponseGeneratorRegistry(mapOf(
-            RuntimeException::class to expectedGenerator
-        ))
+        val registry = TypeBasedResponseGeneratorRegistry(
+            mapOf(RuntimeException::class to expectedGenerator)
+        )
 
         val result = registry.searchFor(IllegalArgumentException())
 
@@ -56,9 +56,9 @@ class TypeBasedResponseGeneratorRegistryTests : FunSpec({
     }
 
     test("map is called once for multiple same calls") {
-        val generatorsMap = spyk(mapOf<KClass<*>, ResponseGenerator<*>>(
-            Exception::class to dummy<ResponseGenerator<Exception>>()
-        ))
+        val generatorsMap = spyk(
+            mapOf<KClass<*>, ResponseGenerator<*>>(Exception::class to dummy<ResponseGenerator<Exception>>())
+        )
         val registry = TypeBasedResponseGeneratorRegistry(generatorsMap)
 
         withContext(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
