@@ -19,7 +19,7 @@ class BasicResponseGeneratorBuilderTests : FreeSpec({
                 RequestDataErrorResponseGeneratorSpecDelegate<Any>()
                     .apply {
                         withMessage { dummy() }
-                        pointingInvalidValue { dummy() }
+                        causedByInvalidInput { dummy() }
                     }
                     .let { BasicResponseGeneratorBuilder.buildFrom(it) }
             },
@@ -42,7 +42,7 @@ class BasicResponseGeneratorBuilderTests : FreeSpec({
 class OperationErrorPayloadGeneratorBuilderTests : FunSpec({
     test("created generator by default generates payload with code same as cause key") {
         val config = OperationErrorPayloadGeneratorSpecDelegate<Any>().apply {
-            identifiedBy("key")
+            identifiedByKey("key")
             withMessage { dummy() }
         }
         val generator = OperationErrorPayloadGeneratorBuilder.buildFrom(config)
@@ -75,9 +75,9 @@ class OperationErrorPayloadGeneratorBuilderTests : FunSpec({
 class RequestDataErrorPayloadGeneratorBuilderTests : FunSpec({
     test("created generator by default generates payload with code same as cause key") {
         val config = RequestDataErrorPayloadGeneratorSpecDelegate<Any>().apply {
-            identifiedBy("key")
+            identifiedByKey("key")
             withMessage { dummy() }
-            pointingInvalidValue { dummy() }
+            causedByInvalidInput { dummy() }
         }
         val generator = RequestDataErrorPayloadGeneratorBuilder.buildFrom(config)
 
@@ -90,7 +90,7 @@ class RequestDataErrorPayloadGeneratorBuilderTests : FunSpec({
         val config = RequestDataErrorPayloadGeneratorSpecDelegate<Any>().apply {
             withCode { sameAsCauseKey() }
             withMessage { dummy() }
-            pointingInvalidValue { dummy() }
+            causedByInvalidInput { dummy() }
         }
         val generator = RequestDataErrorPayloadGeneratorBuilder.buildFrom(config)
 
@@ -101,7 +101,7 @@ class RequestDataErrorPayloadGeneratorBuilderTests : FunSpec({
 
     test("exception is thrown when message resolver is not configured") {
         val config = RequestDataErrorPayloadGeneratorSpecDelegate<Any>().apply {
-            pointingInvalidValue { dummy() }
+            causedByInvalidInput { dummy() }
         }
 
         shouldThrow<IllegalArgumentException> { RequestDataErrorPayloadGeneratorBuilder.buildFrom(config) }

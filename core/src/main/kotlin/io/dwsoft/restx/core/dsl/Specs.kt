@@ -107,17 +107,18 @@ sealed interface SingleErrorPayloadGeneratorSpec<T : Any> {
 }
 
 /**
- * Overloaded version of [identifiedBy] returning [fixed resolver][CauseResolvers.fixedKey].
+ * Delegate of [SingleErrorPayloadGeneratorSpec.identifiedBy] returning [fixed resolver][CauseResolvers.fixedKey].
  */
-fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.identifiedBy(key: String) = identifiedBy { fixedKey(key) }
+fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.identifiedByKey(key: String) = identifiedBy { fixedKey(key) }
 
 /**
- * Overloaded version of [withCode] returning [fixed resolver][CodeResolvers.fixed].
+ * Overloaded version of [SingleErrorPayloadGeneratorSpec.withCode] returning [fixed resolver][CodeResolvers.fixed].
  */
 fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.withCode(code: String) = withCode { fixed(code) }
 
 /**
- * Overloaded version of [withMessage] returning [plain text resolver][MessageResolvers.fromText].
+ * Overloaded version of [SingleErrorPayloadGeneratorSpec.withMessage] returning [plain text resolver]
+ * [MessageResolvers.fromText].
  */
 fun <T : Any> SingleErrorPayloadGeneratorSpec<T>.withMessage(message: String) = withMessage { fromText(message) }
 
@@ -156,7 +157,7 @@ sealed interface RequestDataErrorPayloadGeneratorSpec<T : Any> : SingleErrorPayl
     /**
      * Opens configuration block of [DataErrorSourceResolver].
      */
-    fun pointingInvalidValue(factoryBlock: DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>)
+    fun causedByInvalidInput(factoryBlock: DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>)
 }
 
 internal class RequestDataErrorPayloadGeneratorSpecDelegate<T : Any> : RequestDataErrorPayloadGeneratorSpec<T> {
@@ -182,7 +183,7 @@ internal class RequestDataErrorPayloadGeneratorSpecDelegate<T : Any> : RequestDa
         messageResolverFactoryBlock = factoryBlock
     }
 
-    override fun pointingInvalidValue(factoryBlock: DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>) {
+    override fun causedByInvalidInput(factoryBlock: DataErrorSourceResolvers<T>.() -> DataErrorSourceResolver<T>) {
         dataErrorSourceResolverFactoryBlock = factoryBlock
     }
 }

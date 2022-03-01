@@ -56,7 +56,7 @@ object BasicResponseGeneratorBuilder {
 /**
  * Builder of [OperationErrorPayloadGenerator].
  *
- * If not explicitly [configured][identifiedBy], [cause resolver][CauseResolver] identifying faults by
+ * If not explicitly [configured][identifiedByKey], [cause resolver][CauseResolver] identifying faults by
  * [their runtime type][CauseResolvers.type] is used.
  *
  * If not explicitly [configured][withCode], [code resolver][CodeResolver] using [cause identifier as a code]
@@ -75,7 +75,7 @@ object OperationErrorPayloadGeneratorBuilder {
 /**
  * Builder of [RequestDataErrorPayloadGenerator].
  *
- * If not explicitly [configured][identifiedBy], [cause resolver][CauseResolver] identifying faults by
+ * If not explicitly [configured][identifiedByKey], [cause resolver][CauseResolver] identifying faults by
  * [their runtime type][CauseResolvers.type] is used.
  *
  * If not explicitly [configured][withCode], [code resolver][CodeResolver] using [cause identifier as a code]

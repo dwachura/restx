@@ -2,7 +2,7 @@ package io.dwsoft.restx.core.samples
 
 import io.dwsoft.restx.RestX
 import io.dwsoft.restx.core.dsl.generatedAs
-import io.dwsoft.restx.core.dsl.identifiedBy
+import io.dwsoft.restx.core.dsl.identifiedByKey
 import io.dwsoft.restx.core.dsl.withStatus
 import io.dwsoft.restx.core.response.payload.Message
 import io.dwsoft.restx.core.response.payload.RequestDataError.Source
@@ -14,9 +14,9 @@ fun main() {
     val generator = RestX.config {
         treat<InvalidParamException> {
             asRequestDataError {
-                identifiedBy("INVALID_PARAM")
+                identifiedByKey("INVALID_PARAM")
                 withMessage { generatedAs { Message(context.localizedMessage) } }
-                pointingInvalidValue {
+                causedByInvalidInput {
                     resolvedBy { cause -> cause.context.let { it.type.toSource(it.location) } }
                 }
                 withStatus(400)

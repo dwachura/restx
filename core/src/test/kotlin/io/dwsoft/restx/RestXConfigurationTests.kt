@@ -3,7 +3,7 @@ package io.dwsoft.restx
 import io.dwsoft.restx.core.dsl.BasicResponseGenerators
 import io.dwsoft.restx.core.dsl.ResponseGenerators
 import io.dwsoft.restx.core.dsl.generatedAs
-import io.dwsoft.restx.core.dsl.identifiedBy
+import io.dwsoft.restx.core.dsl.identifiedByKey
 import io.dwsoft.restx.core.dsl.mapBased
 import io.dwsoft.restx.core.dsl.register
 import io.dwsoft.restx.core.dsl.withCode
@@ -79,7 +79,7 @@ class RestXConfigurationTests : FunSpec({
         val generator = RestX.config {
             treatAny {
                 asOperationError {
-                    identifiedBy(causeKey)
+                    identifiedByKey(causeKey)
                     withCode { mapBased(causeKey to expectedCode) }
                     withMessage { dummy() }
                     withStatus { dummy() }
@@ -148,7 +148,7 @@ class RestXConfigurationTests : FunSpec({
             treat<InvalidInput> {
                 asRequestDataError {
                     withMessage { generatedAs { dummy() } }
-                    pointingInvalidValue {
+                    causedByInvalidInput {
                         resolvedBy { cause -> cause.context.let { it.type.toSource(it.location) } }
                     }
                     withStatus { dummy() }
